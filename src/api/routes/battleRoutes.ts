@@ -1,10 +1,12 @@
 import { Router, Request, Response } from 'express';
 import { PvEService } from '@/game/services/PvEService';
 import { BossService } from '@/game/services/BossService';
+import { PvPService } from '@/game/services/PvPService';
 
 const router = Router();
 const pveService = new PvEService();
 const bossService = new BossService();
+const pvpService = new PvPService();
 
 router.post('/pve', async (req: Request, res: Response) => {
   try {
@@ -213,6 +215,184 @@ router.get('/enemies', async (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       error: 'Failed to fetch enemies',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+// PvP Routes
+router.post('/pvp/challenge', async (req: Request, res: Response) => {
+  try {
+    const { challengerId, opponentId } = req.body;
+
+    if (!challengerId || !opponentId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Challenger ID and opponent ID are required',
+      });
+    }
+
+    const match = await pvpService.createMatch(challengerId, opponentId);
+    
+    res.status(201).json({
+      success: true,
+      data: { match },
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: 'Failed to create PvP match',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+router.post('/pvp/:matchId/accept', async (req: Request, res: Response) => {
+  try {
+    const { matchId } = req.params;
+    const match = await pvpService.acceptMatch(matchId);
+    
+    res.json({
+      success: true,
+      data: { match },
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: 'Failed to accept match',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+router.post('/pvp/:matchId/turn', async (req: Request, res: Response) => {
+  try {
+    const { matchId } = req.params;
+    const { characterId, action, skillId } = req.body;
+
+    if (!characterId || !action) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID and action are required',
+      });
+    }
+
+    const result = await pvpService.takeTurn(matchId, characterId, action, skillId);
+    
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: 'Failed to execute turn',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+router.get('/pvp/:matchId', async (req: Request, res: Response) => {
+  try {
+    const { matchId } = req.params;
+    const match = await pvpService.getMatch(matchId);
+    
+    if (!match) {
+      return res.status(404).json({
+        success: false,
+        error: 'Match not found',
+      });
+    }
+
+    res.json({
+      success: true,
+      data: { match },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch match',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+router.get('/pvp/rating/:characterId', async (req: Request, res: Response) => {
+  try {
+    const { characterId } = req.params;
+    const rating = await pvpService.getCharacterRating(characterId);
+    
+    res.json({
+      success: true,
+      data: { rating },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch rating',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+router.get('/pvp/leaderboard', async (req: Request, res: Response) => {
+  try {
+    const { season = '2025-01', limit = 100 } = req.query;
+    const leaderboard = await pvpService.getLeaderboard(season as string, parseInt(limit as string));
+    
+    res.json({
+      success: true,
+      data: { leaderboard },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch leaderboard',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+router.get('/pvp/active/:characterId', async (req: Request, res: Response) => {
+  try {
+    const { characterId } = req.params;
+    const matches = await pvpService.getActiveMatches(characterId);
+    
+    res.json({
+      success: true,
+      data: { matches },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      error: 'Failed to fetch active matches',
+      message: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+});
+
+router.post('/pvp/:matchId/forfeit', async (req: Request, res: Response) => {
+  try {
+    const { matchId } = req.params;
+    const { characterId } = req.body;
+
+    if (!characterId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
+
+    const result = await pvpService.forfeitMatch(matchId, characterId);
+    
+    res.json({
+      success: true,
+      data: result,
+    });
+  } catch (error) {
+    res.status(400).json({
+      success: false,
+      error: 'Failed to forfeit match',
       message: error instanceof Error ? error.message : 'Unknown error',
     });
   }
