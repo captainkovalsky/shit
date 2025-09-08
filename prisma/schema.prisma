@@ -1,0 +1,268 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id         String   @id @default(cuid())
+  telegramId BigInt   @unique
+  username   String?
+  gold       Int      @default(0)
+  gems       Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  // Relations
+  characters     Character[]
+  paymentIntents PaymentIntent[]
+
+  @@map("users")
+}
+
+model Character {
+  id        String   @id @default(cuid())
+  userId    String
+  name      String
+  class     CharacterClass
+  level     Int      @default(1)
+  xp        Int      @default(0)
+  stats     Json
+  equipment Json
+  spriteUrl String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  inventory      InventoryItem[]
+  characterQuests CharacterQuest[]
+  pveBattles     PveBattle[]
+  pvpMatches     PvpMatch[]       @relation("Challenger")
+  pvpMatchesOpponent PvpMatch[]  @relation("Opponent")
+  characterRating CharacterRating?
+  renderJobs     RenderJob[]
+
+  @@unique([userId, name])
+  @@map("characters")
+}
+
+model Item {
+  id           String     @id @default(cuid())
+  type         ItemType
+  rarity       ItemRarity
+  name         String
+  description  String
+  stats        Json
+  priceGold    Int        @default(0)
+  priceGems    Int?
+  stackable    Boolean    @default(false)
+  iconUrl      String?
+  overlayLayer String?
+  createdAt    DateTime   @default(now())
+
+  // Relations
+  inventory InventoryItem[]
+
+  @@map("items")
+}
+
+model InventoryItem {
+  id          String @id @default(cuid())
+  characterId String
+  itemId      String
+  qty         Int    @default(1)
+  isEquipped  Boolean @default(false)
+  createdAt   DateTime @default(now())
+
+  // Relations
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  item      Item      @relation(fields: [itemId], references: [id])
+
+  @@map("inventory")
+}
+
+model Quest {
+  id          String     @id @default(cuid())
+  type        QuestType
+  levelReq    Int        @default(1)
+  title       String
+  description String
+  objective   Json
+  rewards     Json
+  createdAt   DateTime   @default(now())
+
+  // Relations
+  characterQuests CharacterQuest[]
+
+  @@map("quests")
+}
+
+model CharacterQuest {
+  id          String      @id @default(cuid())
+  characterId String
+  questId     String
+  status      QuestStatus @default(AVAILABLE)
+  progress    Json        @default("{}")
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+  quest    Quest     @relation(fields: [questId], references: [id])
+
+  @@unique([characterId, questId])
+  @@map("character_quests")
+}
+
+model PveBattle {
+  id          String   @id @default(cuid())
+  characterId String
+  enemy       Json
+  state       Json
+  result      BattleResult?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@map("pve_battles")
+}
+
+model PvpMatch {
+  id          String      @id @default(cuid())
+  challengerId String
+  opponentId  String
+  status      BattleStatus @default(PENDING)
+  round       Int          @default(1)
+  log         Json         @default("[]")
+  winnerId    String?
+  ratingDelta Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  // Relations
+  challenger Character @relation("Challenger", fields: [challengerId], references: [id], onDelete: Cascade)
+  opponent  Character @relation("Opponent", fields: [opponentId], references: [id], onDelete: Cascade)
+  winner    Character? @relation("Winner", fields: [winnerId], references: [id])
+
+  @@map("pvp_matches")
+}
+
+model CharacterRating {
+  characterId String   @id
+  rating      Int      @default(1000)
+  season      String   @default("2025-01")
+  wins        Int      @default(0)
+  losses      Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@map("character_ratings")
+}
+
+model PaymentIntent {
+  id               String        @id @default(cuid())
+  userId           String
+  product          String
+  amountMinor      Int
+  currency         String        @default("USD")
+  status           PaymentStatus @default(PENDING)
+  provider         String        @default("telegram")
+  metadata         Json          @default("{}")
+  confirmationUrl  String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  // Relations
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("payment_intents")
+}
+
+model RenderJob {
+  id         String       @id @default(cuid())
+  characterId String
+  layers     Json
+  status     RenderStatus @default(QUEUED)
+  resultUrl  String?
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+
+  // Relations
+  character Character @relation(fields: [characterId], references: [id], onDelete: Cascade)
+
+  @@map("render_jobs")
+}
+
+// Enums
+enum CharacterClass {
+  WARRIOR
+  MAGE
+  ROGUE
+}
+
+enum ItemType {
+  WEAPON
+  ARMOR
+  HELMET
+  BOOTS
+  ACCESSORY
+  CONSUMABLE
+}
+
+enum ItemRarity {
+  COMMON
+  RARE
+  EPIC
+  LEGENDARY
+}
+
+enum QuestType {
+  STORY
+  SIDE
+  DAILY
+  WEEKLY
+}
+
+enum QuestStatus {
+  AVAILABLE
+  IN_PROGRESS
+  COMPLETED
+}
+
+enum BattleResult {
+  WIN
+  LOSE
+  FLED
+}
+
+enum BattleStatus {
+  PENDING
+  ACTIVE
+  FINISHED
+}
+
+enum PaymentStatus {
+  PENDING
+  SUCCEEDED
+  FAILED
+  CANCELED
+}
+
+enum RenderStatus {
+  QUEUED
+  PROCESSING
+  DONE
+  FAILED
+}

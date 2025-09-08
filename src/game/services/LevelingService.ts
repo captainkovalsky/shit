@@ -1,0 +1,169 @@
+import { CharacterStats, CharacterClass, LevelUpResult } from '@/types';
+import { config } from '@/config';
+
+export class LevelingService {
+  static calculateXpForLevel(level: number): number {
+    return Math.floor(100 * Math.pow(level, 1.5));
+  }
+
+  static calculateTotalXpForLevel(level: number): number {
+    let total = 0;
+    for (let i = 1; i < level; i++) {
+      total += this.calculateXpForLevel(i);
+    }
+    return total;
+  }
+
+  static addXp(
+    currentLevel: number,
+    currentXp: number,
+    xpGained: number,
+    characterClass: CharacterClass,
+    currentStats: CharacterStats
+  ): LevelUpResult {
+    const oldLevel = currentLevel;
+    let newLevel = currentLevel;
+    let newXp = currentXp + xpGained;
+    let levelsGained = 0;
+
+    // Check for level ups
+    while (newXp >= this.calculateTotalXpForLevel(newLevel + 1)) {
+      newLevel++;
+      levelsGained++;
+    }
+
+    // Apply stat increases for level ups
+    if (levelsGained > 0) {
+      const newStats = this.applyLevelUpStats(
+        currentStats,
+        characterClass,
+        levelsGained
+      );
+      return {
+        oldLevel,
+        newLevel,
+        levelsGained,
+        xpGained,
+        totalXp: newXp,
+        newStats,
+      };
+    }
+
+    return {
+      oldLevel,
+      newLevel,
+      levelsGained,
+      xpGained,
+      totalXp: newXp,
+    };
+  }
+
+  static applyLevelUpStats(
+    stats: CharacterStats,
+    characterClass: CharacterClass,
+    levelsGained: number
+  ): CharacterStats {
+    const newStats = { ...stats };
+
+    // Base stat increases per level
+    newStats.hp += config.game.baseHpPerLevel * levelsGained;
+    newStats.mp += config.game.baseMpPerLevel * levelsGained;
+    newStats.attack += config.game.baseAttackPerLevel * levelsGained;
+    newStats.defense += config.game.baseDefensePerLevel * levelsGained;
+    newStats.speed += config.game.baseSpeedPerLevel * levelsGained;
+    newStats.critChance += config.game.baseCritChancePerLevel * levelsGained;
+
+    // Class-specific bonuses
+    const classBonuses = config.game.classStatBonuses[characterClass];
+    for (const [stat, bonus] of Object.entries(classBonuses)) {
+      if (stat in newStats) {
+        (newStats as any)[stat] += bonus * levelsGained;
+      }
+    }
+
+    return newStats;
+  }
+
+  static createBaseStats(characterClass: CharacterClass, level: number = 1): CharacterStats {
+    const baseHp = 100 + (level - 1) * config.game.baseHpPerLevel;
+    const baseMp = 50 + (level - 1) * config.game.baseMpPerLevel;
+    const baseAttack = 10 + (level - 1) * config.game.baseAttackPerLevel;
+    const baseDefense = 5 + (level - 1) * config.game.baseDefensePerLevel;
+    const baseSpeed = 5.0 + (level - 1) * config.game.baseSpeedPerLevel;
+    const baseCritChance = 0.05 + (level - 1) * config.game.baseCritChancePerLevel;
+
+    // Class-specific bonuses
+    let strength = 5 + level;
+    let agility = 5 + level;
+    let intelligence = 5 + level;
+    let hpBonus = 0;
+    let attackBonus = 0;
+
+    if (characterClass === CharacterClass.WARRIOR) {
+      strength = 8 + level;
+      agility = 5 + level;
+      intelligence = 3 + level;
+      hpBonus = 20;
+      attackBonus = 5;
+    } else if (characterClass === CharacterClass.MAGE) {
+      strength = 3 + level;
+      agility = 5 + level;
+      intelligence = 8 + level;
+      hpBonus = 0;
+      attackBonus = 0;
+    } else if (characterClass === CharacterClass.ROGUE) {
+      strength = 5 + level;
+      agility = 8 + level;
+      intelligence = 5 + level;
+      hpBonus = 0;
+      attackBonus = 0;
+    }
+
+    return {
+      hp: baseHp + hpBonus,
+      mp: baseMp,
+      attack: baseAttack + attackBonus,
+      defense: baseDefense,
+      speed: baseSpeed,
+      critChance: baseCritChance,
+      strength,
+      agility,
+      intelligence,
+    };
+  }
+
+  static getXpToNextLevel(currentLevel: number, currentXp: number): number {
+    const totalXpForNextLevel = this.calculateTotalXpForLevel(currentLevel + 1);
+    return totalXpForNextLevel - currentXp;
+  }
+
+  static getXpProgress(currentLevel: number, currentXp: number): {
+    current: number;
+    required: number;
+    percentage: number;
+  } {
+    const currentLevelXp = this.calculateTotalXpForLevel(currentLevel);
+    const nextLevelXp = this.calculateTotalXpForLevel(currentLevel + 1);
+    const xpInCurrentLevel = currentXp - currentLevelXp;
+    const xpRequiredForLevel = nextLevelXp - currentLevelXp;
+    const percentage = (xpInCurrentLevel / xpRequiredForLevel) * 100;
+
+    return {
+      current: xpInCurrentLevel,
+      required: xpRequiredForLevel,
+      percentage: Math.min(100, Math.max(0, percentage)),
+    };
+  }
+
+  static canLevelUp(currentLevel: number, currentXp: number): boolean {
+    return currentXp >= this.calculateTotalXpForLevel(currentLevel + 1);
+  }
+
+  static getMaxLevel(): number {
+    return 50; // Season 1 max level
+  }
+
+  static isMaxLevel(level: number): boolean {
+    return level >= this.getMaxLevel();
+  }
+}
