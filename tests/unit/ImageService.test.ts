@@ -20,9 +20,9 @@ jest.mock('../../src/config', () => ({
 }));
 
 jest.mock('canvas', () => ({
-  createCanvas: jest.fn(() => ({
-    width: 200,
-    height: 200,
+  createCanvas: jest.fn((width, height) => ({
+    width: width || 200,
+    height: height || 200,
     getContext: jest.fn(() => ({
       drawImage: jest.fn(),
       fillRect: jest.fn(),
@@ -30,6 +30,18 @@ jest.mock('canvas', () => ({
       font: '',
       textAlign: '',
       fillText: jest.fn(),
+      beginPath: jest.fn(),
+      arc: jest.fn(),
+      fill: jest.fn(),
+      stroke: jest.fn(),
+      moveTo: jest.fn(),
+      lineTo: jest.fn(),
+      closePath: jest.fn(),
+      save: jest.fn(),
+      restore: jest.fn(),
+      translate: jest.fn(),
+      rotate: jest.fn(),
+      scale: jest.fn(),
     })),
     toBuffer: jest.fn(() => Buffer.from('mock-image-data')),
   })),
