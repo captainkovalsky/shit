@@ -1,7 +1,7 @@
 import { PrismaClient, Character, CharacterClass } from '@prisma/client';
 import prisma from '../client';
 
-interface CharacterStats {
+export interface CharacterStats {
   hp: number;
   mp: number;
   attack: number;
@@ -13,7 +13,7 @@ interface CharacterStats {
   intelligence: number;
 }
 
-interface Equipment {
+export interface Equipment {
   weapon?: string;
   helmet?: string;
   armor?: string;
@@ -21,7 +21,32 @@ interface Equipment {
   accessory?: string;
 }
 
-export class CharacterService {
+export interface ICharacterService {
+  createCharacter(
+    userId: string,
+    name: string,
+    characterClass: CharacterClass,
+    stats: CharacterStats,
+    equipment: Equipment
+  ): Promise<Character>;
+  getCharacterById(id: string): Promise<Character | null>;
+  getCharacterByName(userId: string, name: string): Promise<Character | null>;
+  getCharactersByUserId(userId: string): Promise<Character[]>;
+  updateCharacter(id: string, data: Partial<Character>): Promise<Character>;
+  updateCharacterStats(id: string, stats: CharacterStats): Promise<Character>;
+  updateCharacterEquipment(id: string, equipment: Equipment): Promise<Character>;
+  addXp(id: string, xp: number): Promise<Character>;
+  levelUp(id: string, newLevel: number, newStats: CharacterStats): Promise<Character>;
+  updateSpriteUrl(id: string, spriteUrl: string): Promise<Character>;
+  deleteCharacter(id: string): Promise<void>;
+  getCharacterWithInventory(id: string): Promise<any>;
+  getCharacterWithQuests(id: string): Promise<any>;
+  getCharacterWithBattles(id: string): Promise<any>;
+  getCharacterCount(userId: string): Promise<number>;
+  getCharactersByLevel(minLevel: number, maxLevel?: number): Promise<any[]>;
+}
+
+export class CharacterService implements ICharacterService {
   constructor(private readonly db: PrismaClient = prisma) {}
 
   async createCharacter(

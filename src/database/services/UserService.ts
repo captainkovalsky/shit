@@ -1,7 +1,21 @@
 import { PrismaClient, User } from '@prisma/client';
 import prisma from '../client';
 
-export class UserService {
+export interface IUserService {
+  createUser(telegramId: bigint, username?: string): Promise<User>;
+  getUserByTelegramId(telegramId: bigint): Promise<User | null>;
+  getUserById(id: string): Promise<User | null>;
+  updateUser(id: string, data: Partial<User>): Promise<User>;
+  addGold(id: string, amount: number): Promise<User>;
+  addGems(id: string, amount: number): Promise<User>;
+  spendGold(id: string, amount: number): Promise<User>;
+  spendGems(id: string, amount: number): Promise<User>;
+  deleteUser(id: string): Promise<void>;
+  getUserWithCharacters(telegramId: bigint): Promise<any>;
+  getUserStats(telegramId: bigint): Promise<any>;
+}
+
+export class UserService implements IUserService {
   constructor(private readonly db: PrismaClient = prisma) {}
 
   async createUser(telegramId: bigint, username?: string): Promise<User> {
