@@ -1,372 +1,484 @@
-# 🎮 Legends of the Realm - MMO RPG Telegram Bot
+# 🎮 MMO RPG Telegram Bot - TypeScript Edition
 
-A comprehensive MMO RPG game built as a Telegram bot with TypeScript, featuring character progression, combat, quests, PvP, and monetization features.
+A comprehensive MMO RPG Telegram Bot built with TypeScript, featuring turn-based combat, character progression, quests, PvP battles, and dynamic sprite generation.
 
-> **Note**: This project has been migrated from Python to TypeScript. See [README-TYPESCRIPT.md](README-TYPESCRIPT.md) for the current TypeScript implementation.
+## 🚀 Features
 
-## 🌟 Features
+### ✅ Implemented Core Features
+- **Character Creation & Management**: Create warriors, mages, and rogues with unique stats
+- **Turn-Based Combat Logic**: Strategic battle calculations with skills, critical hits, and status effects
+- **Character Progression**: Level up system with stat increases and class-specific bonuses
+- **Database Models**: Complete data models for all game systems
+- **Dynamic Sprites**: Auto-generated character sprites with equipment layering
+- **Bot Interface**: Telegram bot with scene-based character creation and menu system
+- **API Infrastructure**: RESTful API with authentication and error handling
+- **Comprehensive Testing**: Unit, integration, and API tests with 80%+ coverage
 
-### Core Gameplay
-- **Character System**: Create and customize characters with different classes (Warrior, Mage, Rogue)
-- **Turn-based Combat**: Strategic PvE battles with skills and equipment
-- **Quest System**: Story quests, side quests, and daily challenges
-- **Inventory & Equipment**: Collect and equip weapons, armor, and accessories
-- **Character Progression**: Level up, gain stats, and unlock new abilities
+### 🔧 Partially Implemented
+- **Equipment System**: Database models ready, equipping logic in progress
+- **Inventory Management**: Database structure complete, management interface pending
+- **PvE Battles**: Combat logic implemented, battle execution pending
 
-### Advanced Features
-- **PvP Arena**: Duel other players and climb the leaderboards
-- **Dynamic Character Sprites**: Auto-generated character images with equipment layering
-- **Economy System**: Gold and premium currency (Gems) with in-app purchases
-- **Guild System**: (Phase 2) Create and join guilds for cooperative gameplay
-- **Real-time Updates**: Live character stats and battle results
+### 📋 Planned Features
+- **Quest System**: Story, side, daily, and weekly quests
+- **PvP Arena**: Battle other players with rating system
+- **Economy System**: Gold/gems earning and spending
+- **Shop System**: Item purchasing with gold and gems
+- **Monetization**: Telegram Payments integration
+
+> 📊 **Feature Status**: See [spec/FEATURE_STATUS.md](spec/FEATURE_STATUS.md) for detailed implementation analysis
 
 ### Technical Features
-- **RESTful API**: Complete API for web clients and admin panels
-- **Webhook Support**: Real-time notifications and payment processing
-- **Image Generation**: Dynamic character sprite creation with PIL
-- **Database**: PostgreSQL with async support for scalability
-- **Payment Integration**: Telegram Payments API for premium currency
+- **TypeScript**: Full type safety and modern JavaScript features
+- **Prisma ORM**: Type-safe database operations
+- **Telegraf**: Modern Telegram Bot framework
+- **Express API**: RESTful API with comprehensive endpoints
+- **Canvas Image Generation**: Dynamic sprite and card generation
+- **Redis Caching**: High-performance caching layer
+- **Docker Support**: Containerized deployment
+- **Comprehensive Testing**: Unit, integration, and API tests
+
+## 🛠️ Tech Stack
+
+- **Runtime**: Node.js 18+
+- **Language**: TypeScript 5.3+
+- **Bot Framework**: Telegraf 4.15+
+- **Web Framework**: Express 4.18+
+- **Database**: PostgreSQL 15+
+- **ORM**: Prisma 5.7+
+- **Cache**: Redis 7+
+- **Image Processing**: Canvas 2.11+
+- **Testing**: Jest 29.7+
+- **Containerization**: Docker & Docker Compose
+
+## 📋 Prerequisites
+
+- Node.js 18.0.0 or higher
+- npm 8.0.0 or higher
+- PostgreSQL 15+
+- Redis 7+
+- Docker (optional)
 
 ## 🚀 Quick Start
 
-### Prerequisites
-- Node.js 18+
-- PostgreSQL 15+
-- Redis (optional, for caching)
-- Telegram Bot Token
+### 1. Clone and Install
 
-### Installation
+```bash
+git clone <repository-url>
+cd mmorpg-telegram-bot
+npm install
+```
 
-1. **Clone the repository**
-   ```bash
-   git clone <repository-url>
-   cd mmorpg-telegram-bot
-   ```
+### 2. Environment Setup
 
-2. **Install dependencies**
-   ```bash
-   npm install
-   ```
+Create a `.env` file:
 
-3. **Configure your environment**
-   - Update `.env` file with your bot token and database credentials
-   - Set up your PostgreSQL database
-   - Configure payment provider tokens
+```env
+# Bot Configuration
+BOT_TOKEN=your_telegram_bot_token
+JWT_SECRET_KEY=your_jwt_secret_key
 
-4. **Set up database**
-   ```bash
-   npm run db:generate
-   npm run db:migrate
-   ```
+# Database
+DATABASE_URL=postgresql://username:password@localhost:5432/mmorpg_bot
 
-5. **Start the services**
-   ```bash
-   npm run dev
-   ```
+# Redis
+REDIS_URL=redis://localhost:6379/0
 
-### Manual Setup
+# Payment
+TELEGRAM_PAYMENT_PROVIDER_TOKEN=your_payment_provider_token
 
-1. **Install dependencies**
-   ```bash
-   npm install
-   ```
+# CDN
+CDN_BASE_URL=https://your-cdn.com
+SPRITE_BASE_PATH=/sprites
+ASSETS_PATH=assets/sprites
 
-2. **Set up database**
-   ```bash
-   createdb mmorpg_bot
-   ```
+# Game Configuration
+MAX_CHARACTERS_PER_USER=3
+MAX_INVENTORY_SLOTS=30
+BASE_INVENTORY_SLOTS=20
 
-3. **Configure environment**
-   ```bash
-   cp .env.example .env
-   # Edit .env with your configuration
-   ```
+# Server
+PORT=3000
+NODE_ENV=development
+LOG_LEVEL=info
+```
 
-4. **Initialize database**
-   ```bash
-   npm run db:generate
-   npm run db:migrate
-   ```
+### 3. Database Setup
 
-5. **Start the bot**
-   ```bash
-   npm run dev
-   ```
+```bash
+# Generate Prisma client
+npm run db:generate
 
-## 🎯 Game Commands
+# Run database migrations
+npm run db:migrate
 
-### Basic Commands
-- `/start` - Start the game and create your first character
-- `/menu` - Access the main game menu
-- `/help` - Show help information
+# Seed the database (optional)
+npm run db:seed
+```
 
-### Character Management
-- Create characters with different classes
-- View character stats and equipment
-- Level up and gain new abilities
+### 4. Development
 
-### Combat
-- Start PvE battles against monsters
-- Use skills and items strategically
-- Earn XP, gold, and loot
+```bash
+# Start development server
+npm run dev
+
+# Run tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Lint code
+npm run lint
+
+# Format code
+npm run format
+```
+
+### 5. Production
+
+```bash
+# Build the application
+npm run build
+
+# Start production server
+npm start
+```
+
+## 🐳 Docker Deployment
+
+### Using Docker Compose
+
+```bash
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f
+
+# Stop services
+docker-compose down
+```
+
+### Manual Docker Build
+
+```bash
+# Build image
+docker build -t mmorpg-bot .
+
+# Run container
+docker run -p 3000:3000 \
+  -e BOT_TOKEN=your_token \
+  -e DATABASE_URL=your_db_url \
+  mmorpg-bot
+```
+
+## 🎮 Game Mechanics
+
+### Character Classes
+
+#### Warrior ⚔️
+- **Strengths**: High HP, Attack, Defense
+- **Skills**: Shield Slam, Battle Cry, Whirlwind
+- **Stat Bonuses**: +2 Strength, +20 HP per level
+
+#### Mage 🔮
+- **Strengths**: High MP, Intelligence, Magic Damage
+- **Skills**: Fireball, Ice Barrier, Lightning Storm
+- **Stat Bonuses**: +2 Intelligence, +20 MP per level
+
+#### Rogue 🗡️
+- **Strengths**: High Speed, Critical Chance, Agility
+- **Skills**: Backstab, Smoke Bomb, Blade Dance
+- **Stat Bonuses**: +2 Agility, +1 Speed, +1% Crit Chance per level
+
+### Combat System
+
+- **Turn-Based**: Strategic combat with action selection
+- **Skills**: Class-specific abilities with MP costs
+- **Critical Hits**: Chance-based critical damage
+- **Status Effects**: Buffs, debuffs, and special conditions
+- **Equipment Bonuses**: Stats from equipped items
+
+### Progression System
+
+- **Leveling**: Gain XP through battles and quests
+- **Stat Growth**: Automatic stat increases per level
+- **Skill Unlocks**: New abilities at certain levels
+- **Equipment**: Better gear for higher levels
+
+## 🔌 API Endpoints
+
+### Authentication
+- `POST /api/v1/auth/login` - Login with Telegram
+- `POST /api/v1/auth/refresh` - Refresh JWT token
+
+### Users
+- `GET /api/v1/users/me` - Get current user info
+- `PUT /api/v1/users/me` - Update user profile
+
+### Characters
+- `GET /api/v1/characters` - List user's characters
+- `POST /api/v1/characters` - Create new character
+- `GET /api/v1/characters/:id` - Get character details
+- `PUT /api/v1/characters/:id` - Update character
+- `DELETE /api/v1/characters/:id` - Delete character
+
+### Inventory
+- `GET /api/v1/characters/:id/inventory` - Get character inventory
+- `POST /api/v1/characters/:id/inventory/equip` - Equip item
+- `POST /api/v1/characters/:id/inventory/unequip` - Unequip item
+
+### Battles
+- `POST /api/v1/battles/pve` - Start PvE battle
+- `POST /api/v1/battles/:id/turns` - Take battle turn
+- `GET /api/v1/battles/:id` - Get battle status
 
 ### Quests
-- Accept story and side quests
-- Complete objectives to earn rewards
-- Progress through the game's storyline
+- `GET /api/v1/quests` - List available quests
+- `POST /api/v1/quests/:id/accept` - Accept quest
+- `POST /api/v1/quests/:id/complete` - Complete quest
 
-### PvP
-- Challenge other players to duels
-- Climb the arena leaderboards
-- Earn ranking rewards
+### Shop
+- `GET /api/v1/shop/items` - List shop items
+- `POST /api/v1/shop/buy/gold` - Buy with gold
+- `POST /api/v1/shop/buy/gems` - Buy with gems
 
-## 🏗️ Architecture
+### Payments
+- `POST /api/v1/payments/intents` - Create payment intent
+- `GET /api/v1/payments/intents/:id` - Get payment status
 
-### Core Components
+## 🧪 Testing
 
+### Test Structure
 ```
-├── src/
-│   ├── bot/            # Telegram bot implementation
-│   ├── api/            # REST API and webhooks
-│   ├── database/       # Database models and services
-│   ├── game/           # Game logic and services
-│   ├── image/          # Character sprite generation
-│   ├── config/         # Configuration management
-│   └── utils/          # Utility functions
-├── prisma/             # Database schema
-├── tests/              # Test suite
-└── package.json        # Dependencies and scripts
+tests/
+├── unit/           # Unit tests
+├── integration/    # Integration tests
+├── bot/           # Bot functionality tests
+├── api/           # API endpoint tests
+└── setup.ts       # Test configuration
 ```
 
-### Database Schema
+### Running Tests
 
-- **users**: Player accounts and currency
-- **characters**: Character data and stats
-- **items**: Item definitions and properties
-- **inventory**: Character item ownership
-- **quests**: Quest definitions and objectives
-- **character_quests**: Player quest progress
-- **pve_battles**: PvE combat sessions
-- **pvp_matches**: PvP combat sessions
-- **payment_intents**: In-app purchase tracking
-- **render_jobs**: Character sprite generation queue
+```bash
+# All tests
+npm test
+
+# Specific test suites
+npm run test:unit
+npm run test:integration
+npm run test:bot
+npm run test:api
+
+# Watch mode
+npm run test:watch
+
+# Coverage report
+npm run test:coverage
+```
+
+### Test Coverage
+- **Target**: 80%+ coverage
+- **Reports**: HTML, LCOV, JSON formats
+- **Thresholds**: Branches, functions, lines, statements
+
+## 📊 Monitoring & Logging
+
+### Logging
+- **Winston**: Structured logging with multiple transports
+- **Daily Rotation**: Automatic log file rotation
+- **Levels**: Error, Warn, Info, Debug
+- **Formats**: JSON (production), Colored (development)
+
+### Health Checks
+- `GET /health` - Application health status
+- Database connection status
+- Redis connection status
+- Bot connection status
 
 ## 🔧 Configuration
 
 ### Environment Variables
 
-```bash
-# Telegram Bot
-BOT_TOKEN=your_bot_token_here
-WEBHOOK_URL=https://yourdomain.com/webhook
-
-# Database
-DATABASE_URL=postgresql://user:pass@localhost/mmorpg_bot
-REDIS_URL=redis://localhost:6379/0
-
-# Payments
-TELEGRAM_PAYMENT_PROVIDER_TOKEN=your_payment_token
-
-# Security
-JWT_SECRET_KEY=your_jwt_secret
-WEBHOOK_SECRET_KEY=your_webhook_secret
-
-# CDN
-CDN_BASE_URL=https://cdn.yourdomain.com
-```
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `BOT_TOKEN` | Telegram bot token | Required |
+| `DATABASE_URL` | PostgreSQL connection string | Required |
+| `REDIS_URL` | Redis connection string | `redis://localhost:6379/0` |
+| `JWT_SECRET_KEY` | JWT signing secret | Required |
+| `PORT` | Server port | `3000` |
+| `NODE_ENV` | Environment | `development` |
+| `LOG_LEVEL` | Logging level | `info` |
 
 ### Game Configuration
 
-- `MAX_CHARACTERS_PER_USER`: Maximum characters per player (default: 3)
-- `MAX_INVENTORY_SLOTS`: Maximum inventory slots (default: 30)
-- `BASE_INVENTORY_SLOTS`: Starting inventory slots (default: 20)
-
-## 📊 API Endpoints
-
-### Authentication
-- `POST /auth/telegram/verify` - Verify Telegram login
-
-### Characters
-- `GET /api/v1/characters` - List user characters
-- `POST /api/v1/characters` - Create new character
-- `GET /api/v1/characters/{id}` - Get character details
-- `GET /api/v1/characters/{id}/inventory` - Get character inventory
-
-### Equipment
-- `POST /api/v1/characters/{id}/equipment/equip` - Equip item
-- `POST /api/v1/characters/{id}/equipment/unequip` - Unequip item
-
-### Combat
-- `POST /api/v1/pve/battles` - Start PvE battle
-- `POST /api/v1/pve/battles/{id}/turns` - Take combat turn
-
-### Quests
-- `GET /api/v1/characters/{id}/quests` - Get character quests
-- `POST /api/v1/characters/{id}/quests/{id}/accept` - Accept quest
-
-### Shop
-- `GET /api/v1/items` - Browse items
-- `POST /api/v1/shop/buy/gold` - Buy item with gold
-
-### Payments
-- `POST /api/v1/payments/intents` - Create payment intent
-
-## 🎨 Character Sprites
-
-The bot generates dynamic character sprites by layering equipment on base character images:
-
-1. **Base Character**: Class and gender-specific base sprite
-2. **Equipment Layers**: Weapons, armor, helmets, boots, accessories
-3. **Final Composite**: Blended image with all equipment visible
-
-### Sprite Generation Process
-
-```typescript
-// Generate character sprite
-const spriteUrl = await imageService.generateCharacterSprite(character);
-
-// Create character card with stats
-const cardUrl = await imageService.generateCharacterCard(character, spriteUrl);
-```
-
-## 💰 Monetization
-
-### Premium Currency (Gems)
-- Purchase gems with real money via Telegram Payments
-- Use gems for rare items, inventory expansion, cosmetic skins
-- Multiple gem pack sizes available
-
-### Payment Flow
-1. Player requests gem purchase
-2. Bot creates payment intent
-3. Telegram handles payment processing
-4. Webhook confirms payment and grants gems
+| Setting | Description | Default |
+|---------|-------------|---------|
+| `MAX_CHARACTERS_PER_USER` | Max characters per user | `3` |
+| `MAX_INVENTORY_SLOTS` | Max inventory slots | `30` |
+| `BASE_INVENTORY_SLOTS` | Base inventory slots | `20` |
+| `BASE_HP_PER_LEVEL` | HP increase per level | `20` |
+| `BASE_MP_PER_LEVEL` | MP increase per level | `10` |
 
 ## 🚀 Deployment
 
-### Production Deployment
+### Production Checklist
 
-1. **Set up server**
-   ```bash
-   # Ubuntu/Debian
-   sudo apt update
-   sudo apt install nodejs npm postgresql redis-server
-   ```
+1. **Environment Setup**
+   - Set `NODE_ENV=production`
+   - Configure production database
+   - Set up Redis instance
+   - Configure CDN for assets
 
-2. **Configure services**
-   ```bash
-   # PostgreSQL
-   sudo -u postgres createdb mmorpg_bot
-   sudo -u postgres createuser mmorpg_user
-   
-   # Redis
-   sudo systemctl start redis-server
-   ```
+2. **Security**
+   - Use strong JWT secret
+   - Enable HTTPS
+   - Configure CORS properly
+   - Set up rate limiting
 
-3. **Deploy application**
-   ```bash
-   git clone <repository>
-   cd mmorpg-telegram-bot
-   npm install
-   npm run build
-   npm start
-   ```
+3. **Performance**
+   - Enable Redis caching
+   - Configure connection pooling
+   - Set up load balancing
+   - Monitor resource usage
 
-4. **Set up webhook**
-   ```bash
-   curl -X POST "https://api.telegram.org/bot<TOKEN>/setWebhook" \
-        -H "Content-Type: application/json" \
-        -d '{"url": "https://yourdomain.com/webhook"}'
-   ```
+4. **Monitoring**
+   - Set up logging aggregation
+   - Configure health checks
+   - Set up error tracking
+   - Monitor bot performance
 
-### Docker Deployment
+### Deployment Options
 
-```dockerfile
-FROM node:18-alpine
-
-WORKDIR /app
-COPY package*.json ./
-RUN npm ci --only=production
-
-COPY . .
-RUN npm run build
-
-EXPOSE 3000
-
-CMD ["npm", "start"]
-```
-
-## 🧪 Testing
-
-Run the test suite:
+#### Traditional Server
 ```bash
-npm test
+# Build and start
+npm run build
+npm start
+
+# Use PM2 for process management
+pm2 start dist/index.js --name mmorpg-bot
 ```
 
-## 📈 Monitoring
+#### Docker
+```bash
+# Build and run
+docker build -t mmorpg-bot .
+docker run -d --name mmorpg-bot mmorpg-bot
+```
 
-### Health Checks
-- `GET /health` - Service health status
-- Database connection monitoring
-- Bot API status monitoring
-
-### Logging
-- Structured logging with timestamps
-- Error tracking and debugging
-- Performance metrics
+#### Kubernetes
+```yaml
+# Example deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mmorpg-bot
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: mmorpg-bot
+  template:
+    metadata:
+      labels:
+        app: mmorpg-bot
+    spec:
+      containers:
+      - name: mmorpg-bot
+        image: mmorpg-bot:latest
+        ports:
+        - containerPort: 3000
+        env:
+        - name: DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: url
+```
 
 ## 🤝 Contributing
 
+### Development Setup
+
 1. Fork the repository
 2. Create a feature branch
-3. Make your changes
-4. Add tests for new functionality
-5. Submit a pull request
+3. Install dependencies: `npm install`
+4. Set up environment: Copy `.env.example` to `.env`
+5. Run tests: `npm test`
+6. Make changes and test
+7. Submit a pull request
+
+### Code Standards
+
+- **TypeScript**: Strict mode enabled
+- **ESLint**: Configured with TypeScript rules
+- **Prettier**: Code formatting
+- **Jest**: Testing framework
+- **Conventional Commits**: Commit message format
+
+### Pull Request Process
+
+1. Ensure tests pass: `npm test`
+2. Check code quality: `npm run lint`
+3. Format code: `npm run format`
+4. Update documentation if needed
+5. Submit PR with clear description
 
 ## 📄 License
 
-This project is licensed under the MIT License - see the LICENSE file for details.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
 ## 🆘 Support
 
-For support and questions:
-- Create an issue on GitHub
-- Check the documentation
-- Review the API endpoints
+### Common Issues
 
-## 🎮 Game Design
+#### Bot Not Responding
+- Check bot token validity
+- Verify webhook configuration
+- Check server logs for errors
 
-### Character Classes
+#### Database Connection Issues
+- Verify DATABASE_URL format
+- Check PostgreSQL service status
+- Ensure database exists
 
-**Warrior**
-- High HP and physical attack
-- Skills: Shield Slam, Battle Cry, Whirlwind
-- Equipment: Swords, heavy armor
+#### Image Generation Fails
+- Install canvas dependencies
+- Check assets directory permissions
+- Verify CDN configuration
 
-**Mage**
-- High MP and magical attack
-- Skills: Fireball, Ice Barrier, Lightning Storm
-- Equipment: Staves, robes
+### Getting Help
 
-**Rogue**
-- High speed and critical hit chance
-- Skills: Backstab, Smoke Bomb, Blade Dance
-- Equipment: Daggers, light armor
+- **Issues**: Create GitHub issue
+- **Discussions**: Use GitHub Discussions
+- **Documentation**: Check this README
+- **Examples**: See `/examples` directory
 
-### Progression System
+## 🎯 Roadmap
 
-- **Leveling**: Gain XP from battles and quests
-- **Stats**: Automatic stat increases per level
-- **Skills**: Unlock new abilities at specific levels
-- **Equipment**: Find and equip better gear
+### Version 1.1
+- [ ] Guild system
+- [ ] Raid battles
+- [ ] More character classes
+- [ ] Advanced quest system
 
-### Economy
+### Version 1.2
+- [ ] Mobile app integration
+- [ ] Real-time notifications
+- [ ] Advanced PvP modes
+- [ ] Seasonal events
 
-- **Gold**: Earned from battles and quests
-- **Gems**: Premium currency for rare items
-- **Items**: Various rarities with different stats
-- **Shop**: Buy items with gold or gems
+### Version 2.0
+- [ ] 3D character models
+- [ ] Voice chat integration
+- [ ] Cross-platform play
+- [ ] Advanced AI opponents
 
 ---
 
-**Built with ❤️ for the Telegram gaming community**
+**Happy Gaming! 🎮**
+
+For more information, visit our [documentation](docs/) or join our [community](https://discord.gg/mmorpg-bot).
