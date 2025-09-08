@@ -1,5 +1,26 @@
-import { CharacterStats, CharacterClass, LevelUpResult } from '@/types';
+import { CharacterClass } from '@prisma/client';
 import { config } from '@/config';
+
+interface CharacterStats {
+  hp: number;
+  mp: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  critChance: number;
+  strength: number;
+  agility: number;
+  intelligence: number;
+}
+
+interface LevelUpResult {
+  oldLevel: number;
+  newLevel: number;
+  levelsGained: number;
+  xpGained: number;
+  totalXp: number;
+  newStats?: CharacterStats;
+}
 
 export class LevelingService {
   static calculateXpForLevel(level: number): number {
@@ -26,13 +47,11 @@ export class LevelingService {
     let newXp = currentXp + xpGained;
     let levelsGained = 0;
 
-    // Check for level ups
     while (newXp >= this.calculateTotalXpForLevel(newLevel + 1)) {
       newLevel++;
       levelsGained++;
     }
 
-    // Apply stat increases for level ups
     if (levelsGained > 0) {
       const newStats = this.applyLevelUpStats(
         currentStats,
@@ -65,7 +84,6 @@ export class LevelingService {
   ): CharacterStats {
     const newStats = { ...stats };
 
-    // Base stat increases per level
     newStats.hp += config.game.baseHpPerLevel * levelsGained;
     newStats.mp += config.game.baseMpPerLevel * levelsGained;
     newStats.attack += config.game.baseAttackPerLevel * levelsGained;
@@ -73,7 +91,6 @@ export class LevelingService {
     newStats.speed += config.game.baseSpeedPerLevel * levelsGained;
     newStats.critChance += config.game.baseCritChancePerLevel * levelsGained;
 
-    // Class-specific bonuses
     const classBonuses = config.game.classStatBonuses[characterClass];
     for (const [stat, bonus] of Object.entries(classBonuses)) {
       if (stat in newStats) {
@@ -92,7 +109,6 @@ export class LevelingService {
     const baseSpeed = 5.0 + (level - 1) * config.game.baseSpeedPerLevel;
     const baseCritChance = 0.05 + (level - 1) * config.game.baseCritChancePerLevel;
 
-    // Class-specific bonuses
     let strength = 5 + level;
     let agility = 5 + level;
     let intelligence = 5 + level;

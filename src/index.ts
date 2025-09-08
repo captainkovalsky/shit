@@ -17,11 +17,9 @@ class Application {
     try {
       logger.info('🚀 Starting MMO RPG Telegram Bot...');
 
-      // Start API server
       await this.apiServer.start();
       logger.info('✅ API server started');
 
-      // Start Telegram bot
       await this.bot.start();
       logger.info('✅ Telegram bot started');
 
@@ -29,7 +27,6 @@ class Application {
       logger.info(`📊 Environment: ${config.environment}`);
       logger.info(`🌐 API running on port: ${config.port}`);
 
-      // Graceful shutdown handlers
       this.setupGracefulShutdown();
     } catch (error) {
       logger.error('❌ Failed to start application:', error);
@@ -42,12 +39,9 @@ class Application {
       logger.info(`📡 Received ${signal}. Starting graceful shutdown...`);
 
       try {
-        // Stop bot
         await this.bot.stop();
         logger.info('✅ Bot stopped gracefully');
 
-        // Close database connections
-        // await prisma.$disconnect();
         logger.info('✅ Database connections closed');
 
         logger.info('👋 Application shutdown complete');
@@ -64,7 +58,6 @@ class Application {
   }
 }
 
-// Start the application
 const app = new Application();
 app.start().catch((error) => {
   console.error('Failed to start application:', error);

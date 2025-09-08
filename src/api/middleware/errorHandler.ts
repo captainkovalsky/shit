@@ -15,7 +15,6 @@ export const errorHandler = (
   let statusCode = error.statusCode || 500;
   let message = error.message || 'Internal server error';
 
-  // Handle specific error types
   if (error.name === 'ValidationError') {
     statusCode = 400;
     message = 'Validation error';
@@ -36,12 +35,10 @@ export const errorHandler = (
     message = 'Unknown database error';
   }
 
-  // Log error in development
   if (config.environment === 'development') {
     console.error('Error:', error);
   }
 
-  // Send error response
   res.status(statusCode).json({
     success: false,
     error: message,

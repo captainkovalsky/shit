@@ -27,7 +27,6 @@ const transports: winston.transport[] = [
   }),
 ];
 
-// Add file transports in production
 if (config.environment === 'production') {
   transports.push(
     new DailyRotateFile({
@@ -60,7 +59,6 @@ export const logger = winston.createLogger({
   ],
 });
 
-// Create a stream object for Morgan
 export const loggerStream = {
   write: (message: string) => {
     logger.info(message.trim());

@@ -28,7 +28,6 @@ export const authMiddleware = async (
     }
 
     if (telegramUserId) {
-      // Telegram user ID authentication (for bot requests)
       req.user = {
         telegramId: telegramUserId,
         userId: '', // Will be resolved in the route handler
@@ -38,7 +37,6 @@ export const authMiddleware = async (
     }
 
     if (authHeader) {
-      // JWT token authentication
       const token = authHeader.replace('Bearer ', '');
       
       try {
@@ -97,7 +95,6 @@ export const optionalAuthMiddleware = async (
           userId: decoded.userId,
         };
       } catch (jwtError) {
-        // Token is invalid, but we continue without authentication
         req.user = undefined;
       }
     }

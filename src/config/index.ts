@@ -9,7 +9,6 @@ const requiredEnvVars = [
   'JWT_SECRET_KEY',
 ] as const;
 
-// Validate required environment variables
 for (const envVar of requiredEnvVars) {
   if (!process.env[envVar]) {
     throw new Error(`Missing required environment variable: ${envVar}`);

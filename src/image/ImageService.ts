@@ -1,8 +1,42 @@
 import { createCanvas, loadImage, Canvas, CanvasRenderingContext2D } from 'canvas';
-import { Character, CharacterClass, Equipment } from '@/types';
+import { CharacterClass } from '@prisma/client';
 import { config } from '@/config';
 import * as fs from 'fs';
 import * as path from 'path';
+
+interface Character {
+  id: string;
+  userId: string;
+  name: string;
+  class: CharacterClass;
+  level: number;
+  xp: number;
+  stats: CharacterStats;
+  equipment: Equipment;
+  spriteUrl?: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+interface CharacterStats {
+  hp: number;
+  mp: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  critChance: number;
+  strength: number;
+  agility: number;
+  intelligence: number;
+}
+
+interface Equipment {
+  weapon?: string;
+  helmet?: string;
+  armor?: string;
+  boots?: string;
+  accessory?: string;
+}
 
 export class ImageService {
   private assetsPath: string;
@@ -38,7 +72,6 @@ export class ImageService {
       const gender = 'male'; // Default gender, could be made configurable
       const baseSpritePath = this.getBaseSpritePath(character.class, gender);
       
-      // Load base character sprite
       let baseImage: Canvas;
       if (fs.existsSync(baseSpritePath)) {
         const img = await loadImage(baseSpritePath);
@@ -46,21 +79,17 @@ export class ImageService {
         const ctx = baseImage.getContext('2d');
         ctx.drawImage(img, 0, 0);
       } else {
-        // Create placeholder if base sprite doesn't exist
         baseImage = this.createPlaceholderSprite(character.class, gender);
       }
 
-      // Apply equipment layers
       const finalImage = await this.applyEquipmentLayers(baseImage, character.equipment);
 
-      // Generate filename and save
       const filename = `character_${character.id}_${character.level}.png`;
       const outputPath = path.join(this.outputPath, filename);
       
       const buffer = finalImage.toBuffer('image/png');
       fs.writeFileSync(outputPath, buffer);
 
-      // Return URL (in production, this would be uploaded to CDN)
       return `${config.image.cdnBaseUrl}${config.image.spriteBasePath}/${filename}`;
     } catch (error) {
       console.error('Error generating sprite:', error);
@@ -73,11 +102,9 @@ export class ImageService {
       const canvas = createCanvas(400, 600);
       const ctx = canvas.getContext('2d');
 
-      // Background
       ctx.fillStyle = '#1a1a28';
       ctx.fillRect(0, 0, 400, 600);
 
-      // Load character sprite
       let spriteImage: Canvas | null = null;
       try {
         const localPath = spriteUrl.replace(config.image.cdnBaseUrl, this.outputPath);
@@ -91,7 +118,6 @@ export class ImageService {
         console.warn('Could not load sprite for card:', error);
       }
 
-      // Draw character sprite
       if (spriteImage) {
         const spriteCtx = spriteImage.getContext('2d');
         const resizedSprite = createCanvas(200, 200);
@@ -101,7 +127,6 @@ export class ImageService {
         ctx.drawImage(resizedSprite, 100, 50);
       }
 
-      // Character info
       ctx.fillStyle = '#ffffff';
       ctx.font = '24px Arial';
       ctx.textAlign = 'center';
@@ -114,7 +139,6 @@ export class ImageService {
       ctx.fillStyle = '#ffffff';
       ctx.fillText(`XP: ${character.xp}`, 200, 320);
 
-      // Stats
       ctx.font = '14px Arial';
       ctx.textAlign = 'left';
       const stats = character.stats;
@@ -136,7 +160,6 @@ export class ImageService {
         ctx.fillText(`${statName}: ${statValue}`, 50, yPos);
       });
 
-      // Save card
       const filename = `card_${character.id}_${character.level}.png`;
       const outputPath = path.join(this.outputPath, 'cards', filename);
       
@@ -175,7 +198,6 @@ export class ImageService {
     const ctx = resultImage.getContext('2d');
     ctx.drawImage(baseImage, 0, 0);
 
-    // Apply equipment in order (background to foreground)
     const layerOrder: (keyof Equipment)[] = ['boots', 'armor', 'helmet', 'weapon', 'accessory'];
 
     for (const layer of layerOrder) {
@@ -207,7 +229,6 @@ export class ImageService {
         ctx.drawImage(img, 0, 0);
         return canvas;
       } else {
-        // Create placeholder equipment
         return this.createEquipmentPlaceholder(equipmentType, equipmentId);
       }
     } catch (error) {
@@ -220,7 +241,6 @@ export class ImageService {
     const canvas = createCanvas(64, 64);
     const ctx = canvas.getContext('2d');
 
-    // Color based on class
     const colors: Record<CharacterClass, string> = {
       [CharacterClass.WARRIOR]: '#8b4513', // Brown
       [CharacterClass.MAGE]: '#4b0082',     // Purple
@@ -229,13 +249,11 @@ export class ImageService {
 
     const color = colors[characterClass];
 
-    // Draw character silhouette
     ctx.fillStyle = color;
     ctx.beginPath();
     ctx.arc(32, 32, 24, 0, 2 * Math.PI);
     ctx.fill();
 
-    // Draw face
     ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
     ctx.fillRect(20, 20, 24, 24);
 
@@ -246,7 +264,6 @@ export class ImageService {
     const canvas = createCanvas(64, 64);
     const ctx = canvas.getContext('2d');
 
-    // Simple equipment representation
     ctx.fillStyle = '#c0c0c0';
     
     switch (equipmentType) {
@@ -284,14 +301,12 @@ export class ImageService {
     const canvas = createCanvas(64, 64);
     const ctx = canvas.getContext('2d');
 
-    // Draw character class initial
     const classInitial = character.class[0];
     ctx.fillStyle = '#ffffff';
     ctx.font = '24px Arial';
     ctx.textAlign = 'center';
     ctx.fillText(classInitial, 32, 40);
 
-    // Save fallback
     const filename = `fallback_${character.id}.png`;
     const outputPath = path.join(this.outputPath, filename);
     
@@ -305,11 +320,9 @@ export class ImageService {
     const canvas = createCanvas(400, 600);
     const ctx = canvas.getContext('2d');
 
-    // Background
     ctx.fillStyle = '#1a1a28';
     ctx.fillRect(0, 0, 400, 600);
 
-    // Simple text-based card
     ctx.fillStyle = '#ffffff';
     ctx.font = '20px Arial';
     ctx.textAlign = 'center';
@@ -318,7 +331,6 @@ export class ImageService {
     ctx.fillStyle = '#6496ff';
     ctx.fillText(`${character.class} - Level ${character.level}`, 200, 330);
 
-    // Save fallback card
     const filename = `fallback_card_${character.id}.png`;
     const outputPath = path.join(this.outputPath, 'cards', filename);
     

@@ -1,4 +1,56 @@
-import { CharacterStats, CharacterClass, Enemy, TurnResult, SkillData } from '@/types';
+import { CharacterClass } from '@prisma/client';
+
+interface CharacterStats {
+  hp: number;
+  mp: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  critChance: number;
+  strength: number;
+  agility: number;
+  intelligence: number;
+}
+
+interface Enemy {
+  name: string;
+  level: number;
+  hp: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  xpReward: number;
+  goldReward: [number, number];
+  lootChance: number;
+  description: string;
+  specialAbilities?: string[];
+}
+
+interface SkillData {
+  damageMultiplier: number;
+  mpCost: number;
+  critBonus?: number;
+  stunChance?: number;
+  buffAttack?: number;
+  duration?: number;
+  aoe?: boolean;
+  element?: string;
+  absorbDamage?: number;
+  dodgeChance?: number;
+  multiHit?: number;
+}
+
+interface TurnResult {
+  characterHp: number;
+  characterMp: number;
+  enemyHp: number;
+  damageDealt: number;
+  damageTaken?: number;
+  mpUsed: number;
+  result?: 'WIN' | 'LOSE' | 'FLED';
+  log: string;
+  error?: string;
+}
 
 export class CombatService {
   static calculateDamage(
@@ -9,12 +61,10 @@ export class CombatService {
   ): number {
     let baseDamage = attackerStats.attack * skillMultiplier;
 
-    // Apply critical hit
     if (isCrit) {
       baseDamage *= 2.0;
     }
 
-    // Apply defense reduction
     const defenseReduction = defenderStats.defense * 0.5;
     const finalDamage = Math.max(1, Math.floor(baseDamage - defenseReduction));
 
@@ -96,7 +146,6 @@ export class CombatService {
     let charMpCost = 0;
     let log = '';
 
-    // Character's turn
     if (action === 'attack') {
       const isCrit = this.isCriticalHit(characterStats.critChance);
       charDamage = this.calculateDamage(characterStats, characterStats, 1.0, isCrit);
@@ -141,10 +190,8 @@ export class CombatService {
       };
     }
 
-    // Apply character damage to enemy
     const newEnemyHp = Math.max(0, enemy.hp - charDamage);
 
-    // Check if enemy is defeated
     if (newEnemyHp <= 0) {
       return {
         characterHp: characterStats.hp,
@@ -157,7 +204,6 @@ export class CombatService {
       };
     }
 
-    // Enemy's turn
     const enemyDamage = this.calculateDamage(
       {
         hp: 0,
@@ -177,7 +223,6 @@ export class CombatService {
 
     const newCharHp = Math.max(0, characterStats.hp - enemyDamage);
 
-    // Check if character is defeated
     if (newCharHp <= 0) {
       return {
         characterHp: 0,

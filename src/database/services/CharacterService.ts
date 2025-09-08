@@ -1,6 +1,25 @@
 import { PrismaClient, Character, CharacterClass } from '@prisma/client';
-import { CharacterStats, Equipment } from '@/types';
 import prisma from '../client';
+
+interface CharacterStats {
+  hp: number;
+  mp: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  critChance: number;
+  strength: number;
+  agility: number;
+  intelligence: number;
+}
+
+interface Equipment {
+  weapon?: string;
+  helmet?: string;
+  armor?: string;
+  boots?: string;
+  accessory?: string;
+}
 
 export class CharacterService {
   constructor(private readonly db: PrismaClient = prisma) {}

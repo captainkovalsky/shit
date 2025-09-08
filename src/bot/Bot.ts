@@ -1,12 +1,31 @@
 import { Telegraf, Context, Scenes } from 'telegraf';
+import { CharacterClass } from '@prisma/client';
 import { config } from '@/config';
 import { UserService } from '@/database/services/UserService';
 import { CharacterService } from '@/database/services/CharacterService';
-import { CharacterClass, CharacterStats, Equipment } from '@/types';
 import { LevelingService } from '@/game/services/LevelingService';
 import { ImageService } from '@/image/ImageService';
 
-// Scene definitions
+interface CharacterStats {
+  hp: number;
+  mp: number;
+  attack: number;
+  defense: number;
+  speed: number;
+  critChance: number;
+  strength: number;
+  agility: number;
+  intelligence: number;
+}
+
+interface Equipment {
+  weapon?: string;
+  helmet?: string;
+  armor?: string;
+  boots?: string;
+  accessory?: string;
+}
+
 interface CharacterCreationSession extends Scenes.SceneSessionData {
   characterClass?: CharacterClass;
   characterName?: string;
@@ -44,7 +63,6 @@ export class Bot {
   }
 
   private setupMiddleware(): void {
-    // Add services to context
     this.bot.use((ctx, next) => {
       ctx.userService = this.userService;
       ctx.characterService = this.characterService;
@@ -52,7 +70,6 @@ export class Bot {
       return next();
     });
 
-    // Logging middleware
     this.bot.use((ctx, next) => {
       console.log(`Received message from ${ctx.from?.username || ctx.from?.id}: ${ctx.message}`);
       return next();
@@ -62,7 +79,6 @@ export class Bot {
   private setupScenes(): void {
     const stage = new Scenes.Stage<BotContext>();
 
-    // Character creation scene
     const characterCreationScene = new Scenes.BaseScene<BotContext>('character_creation');
     
     characterCreationScene.enter(async (ctx) => {
@@ -95,7 +111,6 @@ export class Bot {
       ctx.scene.leave();
     });
 
-    // Combat scene
     const combatScene = new Scenes.BaseScene<BotContext>('combat');
     
     combatScene.enter(async (ctx) => {
@@ -125,18 +140,15 @@ export class Bot {
   }
 
   private setupCommands(): void {
-    // Start command
     this.bot.start(async (ctx) => {
       const telegramId = BigInt(ctx.from.id);
       const username = ctx.from.username || ctx.from.first_name || 'Unknown';
 
-      // Get or create user
       let user = await this.userService.getUserByTelegramId(telegramId);
       if (!user) {
         user = await this.userService.createUser(telegramId, username);
       }
 
-      // Get user's characters
       const characters = await this.characterService.getCharactersByUserId(user.id);
 
       if (characters.length === 0) {
@@ -146,7 +158,6 @@ export class Bot {
       }
     });
 
-    // Menu command
     this.bot.command('menu', async (ctx) => {
       const telegramId = BigInt(ctx.from.id);
       const user = await this.userService.getUserByTelegramId(telegramId);
@@ -160,7 +171,6 @@ export class Bot {
       await this.showMainMenu(ctx, user, characters);
     });
 
-    // Help command
     this.bot.command('help', async (ctx) => {
       await ctx.reply(
         '🎮 Legends of the Realm - Help\n\n' +
@@ -180,7 +190,6 @@ export class Bot {
   }
 
   private setupCallbacks(): void {
-    // Character creation callbacks
     this.bot.action(/^class_(.+)$/, async (ctx) => {
       const characterClass = ctx.match[1].toUpperCase() as CharacterClass;
       ctx.session.characterClass = characterClass;
@@ -191,7 +200,6 @@ export class Bot {
       );
     });
 
-    // Handle character name input
     this.bot.on('text', async (ctx) => {
       if (ctx.session.characterClass && !ctx.message.text.startsWith('/')) {
         const name = ctx.message.text.trim();
@@ -209,21 +217,18 @@ export class Bot {
           return;
         }
 
-        // Check character limit
         const characterCount = await this.characterService.getCharacterCount(user.id);
         if (characterCount >= config.game.maxCharactersPerUser) {
           await ctx.reply(`You can only have ${config.game.maxCharactersPerUser} characters.`);
           return;
         }
 
-        // Check if name is already taken
         const existingCharacter = await this.characterService.getCharacterByName(user.id, name);
         if (existingCharacter) {
           await ctx.reply('This name is already taken. Please choose another.');
           return;
         }
 
-        // Create character
         const stats = LevelingService.createBaseStats(ctx.session.characterClass);
         const equipment: Equipment = {};
         
@@ -235,11 +240,9 @@ export class Bot {
           equipment
         );
 
-        // Generate character sprite
         const spriteUrl = await this.imageService.generateCharacterSprite(character);
         await this.characterService.updateSpriteUrl(character.id, spriteUrl);
 
-        // Generate character card
         const cardUrl = await this.imageService.generateCharacterCard(character, spriteUrl);
 
         await ctx.replyWithPhoto(
@@ -253,12 +256,10 @@ export class Bot {
           }
         );
 
-        // Clear session
         ctx.session.characterClass = undefined;
       }
     });
 
-    // Character selection callbacks
     this.bot.action(/^select_char_(.+)$/, async (ctx) => {
       const characterId = ctx.match[1];
       const character = await this.characterService.getCharacterById(characterId);
@@ -270,7 +271,6 @@ export class Bot {
       }
     });
 
-    // Character info callback
     this.bot.action(/^char_info_(.+)$/, async (ctx) => {
       const characterId = ctx.match[1];
       const character = await this.characterService.getCharacterById(characterId);
@@ -307,7 +307,6 @@ export class Bot {
       );
     });
 
-    // Battle callbacks
     this.bot.action(/^battle_(.+)$/, async (ctx) => {
       const characterId = ctx.match[1];
       const character = await this.characterService.getCharacterById(characterId);
@@ -344,7 +343,6 @@ export class Bot {
       );
     });
 
-    // Battle action callbacks
     this.bot.action(/^action_(.+)$/, async (ctx) => {
       const action = ctx.match[1];
       
@@ -354,7 +352,6 @@ export class Bot {
         return;
       }
 
-      // Handle other battle actions
       await ctx.editMessageText('Battle action executed!');
     });
   }

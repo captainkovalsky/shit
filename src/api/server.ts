@@ -28,10 +28,8 @@ export class ApiServer {
   }
 
   private setupMiddleware(): void {
-    // Security middleware
     this.app.use(helmet());
     
-    // CORS
     this.app.use(cors({
       origin: config.environment === 'production' 
         ? ['https://yourdomain.com'] 
@@ -39,10 +37,8 @@ export class ApiServer {
       credentials: true,
     }));
 
-    // Compression
     this.app.use(compression());
 
-    // Rate limiting
     const limiter = rateLimit({
       windowMs: 15 * 60 * 1000, // 15 minutes
       max: 100, // limit each IP to 100 requests per windowMs
@@ -50,14 +46,11 @@ export class ApiServer {
     });
     this.app.use('/api/', limiter);
 
-    // Body parsing
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-    // Request logging
     this.app.use(requestLogger);
 
-    // Health check
     this.app.get('/health', (req, res) => {
       res.json({
         status: 'healthy',
@@ -69,7 +62,6 @@ export class ApiServer {
   }
 
   private setupRoutes(): void {
-    // API routes
     this.app.use('/api/v1/users', userRoutes);
     this.app.use('/api/v1/characters', characterRoutes);
     this.app.use('/api/v1/battles', battleRoutes);
@@ -78,7 +70,6 @@ export class ApiServer {
     this.app.use('/api/v1/payments', paymentRoutes);
     this.app.use('/webhooks', webhookRoutes);
 
-    // 404 handler
     this.app.use('*', (req, res) => {
       res.status(404).json({
         success: false,
