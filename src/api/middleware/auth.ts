@@ -1,12 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
 import { config } from '@/config/index';
+import { JwtPayload } from '@/types';
 
 export interface AuthenticatedRequest extends Request {
   user?: {
     telegramId: string;
     userId: string;
-  };
+  } | undefined;
 }
 
 export const authMiddleware = async (
@@ -40,7 +41,7 @@ export const authMiddleware = async (
       const token = authHeader.replace('Bearer ', '');
       
       try {
-        const decoded = jwt.verify(token, config.bot.token) as any;
+        const decoded = jwt.verify(token, config.bot.token) as JwtPayload;
         req.user = {
           telegramId: decoded.telegramId,
           userId: decoded.userId,
@@ -89,13 +90,13 @@ export const optionalAuthMiddleware = async (
     } else if (authHeader) {
       try {
         const token = authHeader.replace('Bearer ', '');
-        const decoded = jwt.verify(token, config.bot.token) as any;
+        const decoded = jwt.verify(token, config.bot.token) as JwtPayload;
         req.user = {
           telegramId: decoded.telegramId,
           userId: decoded.userId,
         };
       } catch (jwtError) {
-        req.user = undefined as any;
+        req.user = undefined;
       }
     }
 
