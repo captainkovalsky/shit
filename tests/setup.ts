@@ -22,3 +22,8 @@ process.env['PORT'] = '3000';
 process.env['LOG_LEVEL'] = 'error';
 
 jest.setTimeout(10000);
+
+// Add BigInt serialization support for Jest
+(BigInt.prototype as any).toJSON = function() {
+  return this.toString();
+};

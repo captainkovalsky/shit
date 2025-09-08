@@ -1,6 +1,24 @@
 import { ImageService } from '../../src/image/ImageService';
 import { CharacterClass } from '@prisma/client';
 
+jest.mock('../../src/config', () => ({
+  config: {
+    cdn: {
+      baseUrl: 'https://test-cdn.com',
+      spriteBasePath: '/sprites',
+      assetsPath: 'assets/sprites',
+    },
+    image: {
+      assetsPath: 'assets/sprites',
+    },
+    game: {
+      maxCharactersPerUser: 3,
+      maxInventorySlots: 30,
+      baseInventorySlots: 20,
+    },
+  },
+}));
+
 jest.mock('canvas', () => ({
   createCanvas: jest.fn(() => ({
     width: 200,

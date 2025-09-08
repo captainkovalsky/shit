@@ -7,6 +7,15 @@ jest.mock('@prisma/client', () => ({
   })),
 }));
 
+jest.mock('@/config', () => ({
+  config: {
+    environment: 'development',
+    database: {
+      url: 'postgresql://test:test@localhost:5432/test_db',
+    },
+  },
+}));
+
 describe('Database Client', () => {
   beforeEach(() => {
     jest.clearAllMocks();
@@ -21,29 +30,32 @@ describe('Database Client', () => {
   });
 
   it('should reuse existing PrismaClient instance in development', async () => {
-    const originalEnv = process.env['NODE_ENV'];
-    process.env['NODE_ENV'] = 'development';
-
     const { default: prisma1 } = await import('@/database/client');
     
-    jest.resetModules();
-    
+    // Don't reset modules, just import again
     const { default: prisma2 } = await import('@/database/client');
 
     expect(prisma1).toBe(prisma2);
-
-    process.env['NODE_ENV'] = originalEnv;
   });
 
   it('should create new instance in production', async () => {
-    const originalEnv = process.env['NODE_ENV'];
-    process.env['NODE_ENV'] = 'production';
+    // Mock config to return production environment
+    const mockConfig = {
+      config: {
+        environment: 'production',
+        database: {
+          url: 'postgresql://test:test@localhost:5432/test_db',
+        },
+      },
+    };
+    
+    jest.doMock('@/config', () => mockConfig);
 
+    // Clear the module cache and re-import
+    jest.resetModules();
     const { default: prisma } = await import('@/database/client');
 
     expect(PrismaClient).toHaveBeenCalled();
     expect(prisma).toBeDefined();
-
-    process.env['NODE_ENV'] = originalEnv;
   });
 });

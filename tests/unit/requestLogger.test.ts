@@ -1,6 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { requestLogger } from '@/api/middleware/requestLogger';
 
+jest.mock('@/config', () => ({
+  config: {
+    environment: 'development',
+  },
+}));
+
 describe('Request Logger Middleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
@@ -27,9 +33,6 @@ describe('Request Logger Middleware', () => {
   });
 
   it('should log request in development mode', () => {
-    const originalEnv = process.env['NODE_ENV'];
-    process.env['NODE_ENV'] = 'development';
-
     requestLogger(mockRequest as Request, mockResponse as Response, mockNext);
 
     expect(mockNext).toHaveBeenCalled();
@@ -41,20 +44,26 @@ describe('Request Logger Middleware', () => {
     expect(consoleSpy).toHaveBeenCalledWith(
       expect.stringContaining('GET /test - 200')
     );
-
-    process.env['NODE_ENV'] = originalEnv;
   });
 
   it('should not log request in production mode', () => {
-    const originalEnv = process.env['NODE_ENV'];
-    process.env['NODE_ENV'] = 'production';
+    // Mock config to return production environment
+    const mockConfig = {
+      config: {
+        environment: 'production',
+      },
+    };
+    
+    jest.doMock('@/config', () => mockConfig);
 
-    requestLogger(mockRequest as Request, mockResponse as Response, mockNext);
+    // Clear the module cache and re-import
+    jest.resetModules();
+    const { requestLogger: prodRequestLogger } = require('@/api/middleware/requestLogger');
+
+    prodRequestLogger(mockRequest as Request, mockResponse as Response, mockNext);
 
     expect(mockNext).toHaveBeenCalled();
     expect(consoleSpy).not.toHaveBeenCalled();
-
-    process.env['NODE_ENV'] = originalEnv;
   });
 
   it('should call next function', () => {

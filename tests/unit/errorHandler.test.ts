@@ -1,6 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import { errorHandler, AppError } from '@/api/middleware/errorHandler';
 
+jest.mock('@/config', () => ({
+  config: {
+    environment: 'development',
+  },
+}));
+
 describe('Error Handler Middleware', () => {
   let mockRequest: Partial<Request>;
   let mockResponse: Partial<Response>;
@@ -30,10 +36,8 @@ describe('Error Handler Middleware', () => {
     expect(mockResponse.json).toHaveBeenCalledWith({
       success: false,
       error: 'Test error',
-      ...(process.env['NODE_ENV'] === 'development' && { 
-        stack: error.stack,
-        details: error 
-      })
+      stack: error.stack,
+      details: error
     });
   });
 
@@ -46,17 +50,12 @@ describe('Error Handler Middleware', () => {
     expect(mockResponse.json).toHaveBeenCalledWith({
       success: false,
       error: 'Generic error',
-      ...(process.env['NODE_ENV'] === 'development' && { 
-        stack: error.stack,
-        details: error 
-      })
+      stack: error.stack,
+      details: error
     });
   });
 
   it('should include stack trace in development mode', () => {
-    const originalEnv = process.env['NODE_ENV'];
-    process.env['NODE_ENV'] = 'development';
-
     const error = new Error('Test error');
 
     errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
@@ -67,23 +66,29 @@ describe('Error Handler Middleware', () => {
       stack: error.stack,
       details: error
     });
-
-    process.env['NODE_ENV'] = originalEnv;
   });
 
   it('should not include stack trace in production mode', () => {
-    const originalEnv = process.env['NODE_ENV'];
-    process.env['NODE_ENV'] = 'production';
+    // Mock config to return production environment
+    const mockConfig = {
+      config: {
+        environment: 'production',
+      },
+    };
+    
+    jest.doMock('@/config', () => mockConfig);
+
+    // Clear the module cache and re-import
+    jest.resetModules();
+    const { errorHandler: prodErrorHandler } = require('@/api/middleware/errorHandler');
 
     const error = new Error('Test error');
 
-    errorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
+    prodErrorHandler(error, mockRequest as Request, mockResponse as Response, mockNext);
 
     expect(mockResponse.json).toHaveBeenCalledWith({
       success: false,
       error: 'Test error'
     });
-
-    process.env['NODE_ENV'] = originalEnv;
   });
 });
