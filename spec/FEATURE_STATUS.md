@@ -70,12 +70,25 @@ Based on SPEC.md analysis, here's the current implementation status:
 - ❌ Quest progress tracking
 - ❌ Quest rewards distribution
 - ❌ Storyline progression
+- ❌ Story Quests (Main Plotline) - 6 main quests from "The First Hunt" to "The Dragon Lord"
+- ❌ Side Quests (Optional) - 5 optional side quests for additional content
+- ❌ Quest requirements validation (level, prerequisites)
+- ❌ Quest objective tracking (defeat X enemies, collect Y items)
+- ❌ Quest reward system (XP, gold, items)
+- ❌ Quest completion and progression logic
 
 ### 3. PvE System
 - ❌ Monster/NPC spawning
 - ❌ Battle completion and rewards
 - ❌ Loot drop system
 - ❌ Area-based encounters
+- ❌ Boss System Implementation:
+  - ❌ Goblin Chief (Level 5 boss) - 1500 HP, 3 skills, Rare weapon reward
+  - ❌ Dragon's Guardian (Level 10 boss) - 3000 HP, 2 skills, Epic armor reward
+  - ❌ Dragon Lord (Level 12 final boss) - 5000 HP, 3 skills, guaranteed Epic + Legendary chance
+- ❌ Boss skill system (Smash, Roar, Enrage, Stone Slam, Earthquake, Fire Breath, Tail Swipe)
+- ❌ Boss battle mechanics (HP thresholds, skill triggers, enrage states)
+- ❌ Boss reward distribution (guaranteed drops, rare item chances)
 
 ### 4. PvP System
 - ❌ Duel system (/duel @username)
@@ -115,14 +128,34 @@ Based on SPEC.md analysis, here's the current implementation status:
 - ❌ Inventory management
 - ❌ Character progression tracking
 
+## 🎮 QUEST & BOSS IMPLEMENTATION REQUIREMENTS
+
+### Quest System Architecture
+- **Quest Database Models**: Quest definitions, objectives, rewards, prerequisites
+- **Quest State Management**: Active, completed, available quest tracking
+- **Quest Progression Logic**: Objective completion validation and reward distribution
+- **Quest UI Integration**: Bot interface for quest acceptance, progress viewing, completion
+
+### Boss System Architecture
+- **Boss Entity Models**: HP, skills, AI behavior, reward tables
+- **Boss Battle Mechanics**: Special abilities, enrage states, HP thresholds
+- **Boss Skill System**: Individual skill implementations with effects and cooldowns
+- **Boss Reward System**: Guaranteed drops, rare item chances, XP/gold rewards
+
+### Implementation Complexity
+- **High Complexity**: Boss AI, skill interactions, enrage mechanics
+- **Medium Complexity**: Quest progression tracking, objective validation
+- **Low Complexity**: Quest UI, basic reward distribution
+
 ## 📋 IMPLEMENTATION PRIORITY
 
 ### High Priority (Core Game Loop)
 1. Complete PvE battle system
-2. Implement quest system
-3. Add economy (gold/gems)
-4. Create shop system
-5. Implement inventory management
+2. Implement quest system (Story Quests first, then Side Quests)
+3. Implement boss system (Goblin Chief → Dragon's Guardian → Dragon Lord)
+4. Add economy (gold/gems)
+5. Create shop system
+6. Implement inventory management
 
 ### Medium Priority (Engagement)
 1. PvP duel system
@@ -139,10 +172,19 @@ Based on SPEC.md analysis, here's the current implementation status:
 ## 🎯 NEXT STEPS
 
 1. **Complete PvE System**: Implement actual battle execution with rewards
-2. **Quest System**: Create quest management and progression
-3. **Economy**: Add gold earning and spending mechanics
-4. **Shop**: Implement item purchasing system
-5. **Inventory**: Add equipment management
-6. **PvP**: Build duel and ranking system
-7. **Monetization**: Integrate Telegram Payments
-8. **Visual**: Enhance equipment layering system
+2. **Quest System**: 
+   - Implement quest database models and state management
+   - Create story quests (The First Hunt → The Dragon Lord)
+   - Add side quests for additional content
+   - Build quest progression and reward system
+3. **Boss System**: 
+   - Implement Goblin Chief (Level 5) with 3 skills
+   - Create Dragon's Guardian (Level 10) with 2 skills  
+   - Build Dragon Lord (Level 12) final boss with 3 skills
+   - Add boss AI, enrage mechanics, and special abilities
+4. **Economy**: Add gold earning and spending mechanics
+5. **Shop**: Implement item purchasing system
+6. **Inventory**: Add equipment management
+7. **PvP**: Build duel and ranking system
+8. **Monetization**: Integrate Telegram Payments
+9. **Visual**: Enhance equipment layering system
