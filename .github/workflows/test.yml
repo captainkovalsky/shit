@@ -10,6 +10,16 @@ jobs:
   test:
     runs-on: ubuntu-latest
     
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/test_mmorpg_bot
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      JWT_SECRET: test-jwt-secret-key-for-testing-only
+      BOT_TOKEN: test-bot-token
+      PAYMENT_PROVIDER_TOKEN: test-payment-token
+      CDN_BASE_URL: https://test-cdn.com
+      LOG_LEVEL: error
+    
     services:
       postgres:
         image: postgres:15
@@ -83,6 +93,16 @@ jobs:
 
   performance:
     runs-on: ubuntu-latest
+    
+    env:
+      DATABASE_URL: postgresql://test:test@localhost:5432/test_mmorpg_bot
+      REDIS_URL: redis://localhost:6379
+      NODE_ENV: test
+      JWT_SECRET: test-jwt-secret-key-for-testing-only
+      BOT_TOKEN: test-bot-token
+      PAYMENT_PROVIDER_TOKEN: test-payment-token
+      CDN_BASE_URL: https://test-cdn.com
+      LOG_LEVEL: error
     
     services:
       postgres:
