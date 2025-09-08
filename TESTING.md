@@ -19,21 +19,19 @@ The test suite is organized into the following structure:
 
 ```
 tests/
-├── __init__.py
-├── conftest.py                 # Pytest configuration and fixtures
+├── setup.ts                    # Jest configuration and setup
 ├── unit/                       # Unit tests
-│   ├── __init__.py
-│   ├── test_models.py         # Model tests
-│   └── test_game_logic.py     # Game logic tests
+│   ├── UserService.test.ts    # User service tests
+│   ├── CharacterService.test.ts # Character service tests
+│   ├── CombatService.test.ts  # Combat service tests
+│   ├── LevelingService.test.ts # Leveling service tests
+│   └── ImageService.test.ts   # Image service tests
 ├── integration/               # Integration tests
-│   ├── __init__.py
-│   └── test_database.py      # Database integration tests
+│   └── database.test.ts       # Database integration tests
 ├── bot/                       # Bot functionality tests
-│   ├── __init__.py
-│   └── test_bot_handlers.py  # Bot handler tests
+│   └── Bot.test.ts            # Bot functionality tests
 └── api/                       # API tests
-    ├── __init__.py
-    └── test_web_server.py    # Web server API tests
+    └── server.test.ts         # API server tests
 ```
 
 ## 🚀 Running Tests
@@ -42,56 +40,56 @@ tests/
 
 ```bash
 # Run all tests
-python run_tests.py
+npm test
 
 # Run specific test types
-python run_tests.py --type unit
-python run_tests.py --type integration
-python run_tests.py --type bot
-python run_tests.py --type api
+npm run test:unit
+npm run test:integration
+npm run test:bot
+npm run test:api
 
 # Run tests with coverage
-python run_tests.py --coverage
+npm run test:coverage
 
 # Run code linting
-python run_tests.py --lint
+npm run lint
 
 # Run performance tests
-python run_tests.py --performance
+npm run test:performance
 ```
 
-### Using pytest directly
+### Using Jest directly
 
 ```bash
 # Run all tests
-pytest
+jest
 
 # Run specific test file
-pytest tests/unit/test_models.py
+jest tests/unit/UserService.test.ts
 
 # Run tests with verbose output
-pytest -v
+jest --verbose
 
 # Run tests with coverage
-pytest --cov=. --cov-report=html
+jest --coverage
 
 # Run specific test by name
-pytest -k "test_character_creation"
+jest --testNamePattern="character creation"
 
-# Run tests by marker
-pytest -m unit
-pytest -m integration
-pytest -m database
+# Run tests by type
+jest --testPathPattern="unit"
+jest --testPathPattern="integration"
+jest --testPathPattern="database"
 ```
 
 ### Test Environment Setup
 
 ```bash
 # Setup test environment only
-python run_tests.py --setup-only
+npm run test:setup
 
 # Skip dependency check
-python run_tests.py --no-deps
+npm test -- --no-deps
 ```
 
 ## 🎯 Test Types
@@ -104,18 +102,19 @@ Unit tests focus on testing individual components in isolation:
 - **Game Logic Tests** (`test_game_logic.py`): Test combat, leveling, loot, quest systems
 
 **Example:**
-```python
-@pytest.mark.unit
-def test_character_stats_creation():
-    """Test creating CharacterStats instance"""
-    stats = CharacterStats(
-        hp=100, mp=50, attack=10, defense=5, speed=5.0,
-        crit_chance=0.05, strength=8, agility=6, intelligence=4
-    )
+```typescript
+describe('CharacterStats', () => {
+  test('should create CharacterStats instance', () => {
+    const stats = {
+      hp: 100, mp: 50, attack: 10, defense: 5, speed: 5.0,
+      critChance: 0.05, strength: 8, agility: 6, intelligence: 4
+    };
     
-    assert stats.hp == 100
-    assert stats.mp == 50
-    assert stats.attack == 10
+    expect(stats.hp).toBe(100);
+    expect(stats.mp).toBe(50);
+    expect(stats.attack).toBe(10);
+  });
+});
 ```
 
 ### Integration Tests (`tests/integration/`)

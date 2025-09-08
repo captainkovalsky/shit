@@ -182,7 +182,7 @@
 
   - Equipment layered dynamically (weapon, armor, helmet, accessories).  
 
-  - Image rendering via **PIL (Python)** or **node-canvas (Node.js)**.  
+  - Image rendering via **node-canvas (Node.js)**.  
 
   - Output: PNG/JPEG sent in Telegram message with stats.  
 
@@ -214,7 +214,7 @@
 
 ## **6\. Technical Specification**
 
-- **Bot Framework (in progress):** Python (Aiogram) / Node.js (Telegraf).  
+- **Bot Framework:** Node.js (Telegraf).  
 
 - **Database:** PostgreSQL (structured data, transactions).
 - **Database Schema (simplified):  
@@ -231,7 +231,7 @@
 
 - **Scaling:** Redis caching for active battles, async job queues for PvE combat.  
 
-- **Image Processing:** PIL (Python) or node-canvas.  
+- **Image Processing:** node-canvas.  
 
 - **Hosting:** VPS (DigitalOcean, AWS EC2).  
 

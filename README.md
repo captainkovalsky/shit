@@ -1,6 +1,8 @@
 # 🎮 Legends of the Realm - MMO RPG Telegram Bot
 
-A comprehensive MMO RPG game built as a Telegram bot with character progression, combat, quests, PvP, and monetization features.
+A comprehensive MMO RPG game built as a Telegram bot with TypeScript, featuring character progression, combat, quests, PvP, and monetization features.
+
+> **Note**: This project has been migrated from Python to TypeScript. See [README-TYPESCRIPT.md](README-TYPESCRIPT.md) for the current TypeScript implementation.
 
 ## 🌟 Features
 
@@ -28,8 +30,8 @@ A comprehensive MMO RPG game built as a Telegram bot with character progression,
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.8+
-- PostgreSQL 12+
+- Node.js 18+
+- PostgreSQL 15+
 - Redis (optional, for caching)
 - Telegram Bot Token
 
@@ -41,9 +43,9 @@ A comprehensive MMO RPG game built as a Telegram bot with character progression,
    cd mmorpg-telegram-bot
    ```
 
-2. **Run the deployment script**
+2. **Install dependencies**
    ```bash
-   python deploy.py
+   npm install
    ```
 
 3. **Configure your environment**
@@ -51,16 +53,22 @@ A comprehensive MMO RPG game built as a Telegram bot with character progression,
    - Set up your PostgreSQL database
    - Configure payment provider tokens
 
-4. **Start the services**
+4. **Set up database**
    ```bash
-   python deploy.py --start
+   npm run db:generate
+   npm run db:migrate
+   ```
+
+5. **Start the services**
+   ```bash
+   npm run dev
    ```
 
 ### Manual Setup
 
 1. **Install dependencies**
    ```bash
-   pip install -r requirements.txt
+   npm install
    ```
 
 2. **Set up database**
@@ -76,17 +84,13 @@ A comprehensive MMO RPG game built as a Telegram bot with character progression,
 
 4. **Initialize database**
    ```bash
-   python -c "from database import init_database; import asyncio; asyncio.run(init_database('postgresql://user:pass@localhost/mmorpg_bot'))"
+   npm run db:generate
+   npm run db:migrate
    ```
 
 5. **Start the bot**
    ```bash
-   python bot.py
-   ```
-
-6. **Start the web server** (in another terminal)
-   ```bash
-   python web_server.py
+   npm run dev
    ```
 
 ## 🎯 Game Commands
@@ -121,15 +125,17 @@ A comprehensive MMO RPG game built as a Telegram bot with character progression,
 ### Core Components
 
 ```
-├── bot.py              # Main Telegram bot
-├── web_server.py       # REST API and webhooks
-├── database.py         # Database models and queries
-├── models.py          # Game data models
-├── game_logic.py      # Combat, leveling, loot systems
-├── image_generator.py # Character sprite generation
-├── game_data.py       # Static game content
-├── config.py          # Configuration management
-└── deploy.py          # Deployment script
+├── src/
+│   ├── bot/            # Telegram bot implementation
+│   ├── api/            # REST API and webhooks
+│   ├── database/       # Database models and services
+│   ├── game/           # Game logic and services
+│   ├── image/          # Character sprite generation
+│   ├── config/         # Configuration management
+│   └── utils/          # Utility functions
+├── prisma/             # Database schema
+├── tests/              # Test suite
+└── package.json        # Dependencies and scripts
 ```
 
 ### Database Schema
@@ -215,12 +221,12 @@ The bot generates dynamic character sprites by layering equipment on base charac
 
 ### Sprite Generation Process
 
-```python
-# Generate character sprite
-sprite_url = await sprite_generator.generate_character_sprite(character)
+```typescript
+// Generate character sprite
+const spriteUrl = await imageService.generateCharacterSprite(character);
 
-# Create character card with stats
-card_url = await card_generator.generate_character_card(character, sprite_url)
+// Create character card with stats
+const cardUrl = await imageService.generateCharacterCard(character, spriteUrl);
 ```
 
 ## 💰 Monetization
@@ -244,7 +250,7 @@ card_url = await card_generator.generate_character_card(character, sprite_url)
    ```bash
    # Ubuntu/Debian
    sudo apt update
-   sudo apt install python3 python3-pip postgresql redis-server
+   sudo apt install nodejs npm postgresql redis-server
    ```
 
 2. **Configure services**
@@ -261,7 +267,9 @@ card_url = await card_generator.generate_character_card(character, sprite_url)
    ```bash
    git clone <repository>
    cd mmorpg-telegram-bot
-   python deploy.py
+   npm install
+   npm run build
+   npm start
    ```
 
 4. **Set up webhook**
@@ -274,23 +282,25 @@ card_url = await card_generator.generate_character_card(character, sprite_url)
 ### Docker Deployment
 
 ```dockerfile
-FROM python:3.9-slim
+FROM node:18-alpine
 
 WORKDIR /app
-COPY requirements.txt .
-RUN pip install -r requirements.txt
+COPY package*.json ./
+RUN npm ci --only=production
 
 COPY . .
-EXPOSE 8080
+RUN npm run build
 
-CMD ["python", "web_server.py"]
+EXPOSE 3000
+
+CMD ["npm", "start"]
 ```
 
 ## 🧪 Testing
 
 Run the test suite:
 ```bash
-python -m pytest tests/ -v
+npm test
 ```
 
 ## 📈 Monitoring
