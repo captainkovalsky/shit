@@ -41,7 +41,7 @@ describe('UserService', () => {
 
       (mockPrisma.user.create as jest.Mock).mockResolvedValue(mockUser);
 
-      const result = await userService.createUser(123456789, 'testuser');
+      const result = await userService.createUser(BigInt(123456789), 'testuser');
 
       expect(mockPrisma.user.create).toHaveBeenCalledWith({
         data: {
@@ -70,7 +70,7 @@ describe('UserService', () => {
 
       (mockPrisma.user.create as jest.Mock).mockResolvedValue(mockUser);
 
-      const result = await userService.createUser(123456789);
+      const result = await userService.createUser(BigInt(123456789));
 
       expect(mockPrisma.user.create).toHaveBeenCalledWith({
         data: {
@@ -101,7 +101,7 @@ describe('UserService', () => {
 
       (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
 
-      const result = await userService.getUserByTelegramId(123456789);
+      const result = await userService.getUserByTelegramId(BigInt(123456789));
 
       expect(mockPrisma.user.findUnique).toHaveBeenCalledWith({
         where: { telegramId: BigInt(123456789) },
@@ -115,7 +115,7 @@ describe('UserService', () => {
     it('should return null when user not found', async () => {
       (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(null);
 
-      const result = await userService.getUserByTelegramId(123456789);
+      const result = await userService.getUserByTelegramId(BigInt(123456789));
 
       expect(result).toBeNull();
     });
