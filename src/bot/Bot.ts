@@ -1,6 +1,6 @@
 import { Telegraf, Context, Scenes } from 'telegraf';
 import { CharacterClass } from '@prisma/client';
-import { config } from '@/config';
+import { config } from '@/config/index';
 import { UserService } from '@/database/services/UserService';
 import { CharacterService } from '@/database/services/CharacterService';
 import { LevelingService } from '@/game/services/LevelingService';

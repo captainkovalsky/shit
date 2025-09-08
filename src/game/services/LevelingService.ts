@@ -1,5 +1,5 @@
 import { CharacterClass } from '@prisma/client';
-import { config } from '@/config';
+import { config } from '@/config/index';
 
 interface CharacterStats {
   hp: number;

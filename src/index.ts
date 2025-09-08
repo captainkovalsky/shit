@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { config } from '@/config';
+import { config } from '@/config/index';
 import { Bot } from '@/bot/Bot';
 import { ApiServer } from '@/api/server';
 import { logger } from '@/utils/logger';

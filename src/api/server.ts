@@ -3,7 +3,7 @@ import cors from 'cors';
 import helmet from 'helmet';
 import compression from 'compression';
 import rateLimit from 'express-rate-limit';
-import { config } from '@/config';
+import { config } from '@/config/index';
 import { errorHandler } from '@/api/middleware/errorHandler';
 import { requestLogger } from '@/api/middleware/requestLogger';
 import { userRoutes } from '@/api/routes/userRoutes';

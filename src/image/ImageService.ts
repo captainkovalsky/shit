@@ -1,6 +1,6 @@
 import { createCanvas, loadImage, Canvas } from 'canvas';
 import { CharacterClass } from '@prisma/client';
-import { config } from '@/config';
+import { config } from '@/config/index';
 import * as fs from 'fs';
 import * as path from 'path';
 
