@@ -161,7 +161,7 @@ export class CombatService {
           enemyHp: enemy.hp,
           damageDealt: 0,
           mpUsed: 0,
-          result: undefined,
+          result: undefined as any,
           log: 'Not enough MP',
           error: 'Not enough MP',
         };
@@ -243,7 +243,7 @@ export class CombatService {
       damageDealt: charDamage,
       damageTaken: enemyDamage,
       mpUsed: charMpCost,
-      result: undefined,
+      result: undefined as any,
       log: `${log}. ${enemy.name} deals ${enemyDamage} damage to you.`,
     };
   }

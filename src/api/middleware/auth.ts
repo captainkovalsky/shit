@@ -74,7 +74,7 @@ export const authMiddleware = async (
 
 export const optionalAuthMiddleware = async (
   req: AuthenticatedRequest,
-  res: Response,
+  _res: Response,
   next: NextFunction
 ): Promise<void> => {
   try {
@@ -95,7 +95,7 @@ export const optionalAuthMiddleware = async (
           userId: decoded.userId,
         };
       } catch (jwtError) {
-        req.user = undefined;
+        req.user = undefined as any;
       }
     }
 

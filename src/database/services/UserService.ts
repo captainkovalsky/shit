@@ -8,7 +8,7 @@ export class UserService {
     return this.db.user.create({
       data: {
         telegramId,
-        username,
+        username: username || null,
         gold: 0,
         gems: 0,
       },

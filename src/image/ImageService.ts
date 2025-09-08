@@ -1,4 +1,4 @@
-import { createCanvas, loadImage, Canvas, CanvasRenderingContext2D } from 'canvas';
+import { createCanvas, loadImage, Canvas } from 'canvas';
 import { CharacterClass } from '@prisma/client';
 import { config } from '@/config';
 import * as fs from 'fs';
@@ -119,7 +119,6 @@ export class ImageService {
       }
 
       if (spriteImage) {
-        const spriteCtx = spriteImage.getContext('2d');
         const resizedSprite = createCanvas(200, 200);
         const resizedCtx = resizedSprite.getContext('2d');
         resizedCtx.drawImage(spriteImage, 0, 0, 200, 200);
@@ -189,7 +188,7 @@ export class ImageService {
       },
     };
 
-    const filename = baseSprites[characterClass][gender];
+    const filename = baseSprites[characterClass]?.[gender] || 'default.png';
     return path.join(this.assetsPath, 'sprites', filename);
   }
 
@@ -237,7 +236,7 @@ export class ImageService {
     }
   }
 
-  private createPlaceholderSprite(characterClass: CharacterClass, gender: string): Canvas {
+  private createPlaceholderSprite(characterClass: CharacterClass, _gender: string): Canvas {
     const canvas = createCanvas(64, 64);
     const ctx = canvas.getContext('2d');
 
@@ -247,7 +246,7 @@ export class ImageService {
       [CharacterClass.ROGUE]: '#006400',    // Dark green
     };
 
-    const color = colors[characterClass];
+    const color = colors[characterClass] || '#666666';
 
     ctx.fillStyle = color;
     ctx.beginPath();
@@ -260,7 +259,7 @@ export class ImageService {
     return canvas;
   }
 
-  private createEquipmentPlaceholder(equipmentType: string, equipmentId: string): Canvas {
+  private createEquipmentPlaceholder(equipmentType: string, _equipmentId: string): Canvas {
     const canvas = createCanvas(64, 64);
     const ctx = canvas.getContext('2d');
 
@@ -301,7 +300,7 @@ export class ImageService {
     const canvas = createCanvas(64, 64);
     const ctx = canvas.getContext('2d');
 
-    const classInitial = character.class[0];
+    const classInitial = character.class[0] || '?';
     ctx.fillStyle = '#ffffff';
     ctx.font = '24px Arial';
     ctx.textAlign = 'center';

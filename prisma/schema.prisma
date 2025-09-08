@@ -46,6 +46,7 @@ model Character {
   pveBattles     PveBattle[]
   pvpMatches     PvpMatch[]       @relation("Challenger")
   pvpMatchesOpponent PvpMatch[]  @relation("Opponent")
+  pvpMatchesWinner PvpMatch[]    @relation("Winner")
   characterRating CharacterRating?
   renderJobs     RenderJob[]
 

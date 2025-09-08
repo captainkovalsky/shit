@@ -1,5 +1,72 @@
 import dotenv from 'dotenv';
-import { AppConfig, CharacterClass, ItemRarity } from '@/types';
+
+enum CharacterClass {
+  WARRIOR = 'WARRIOR',
+  MAGE = 'MAGE',
+  ROGUE = 'ROGUE',
+}
+
+enum ItemRarity {
+  COMMON = 'COMMON',
+  RARE = 'RARE',
+  EPIC = 'EPIC',
+  LEGENDARY = 'LEGENDARY',
+}
+
+interface DatabaseConfig {
+  url: string;
+  maxConnections?: number;
+  connectionTimeout?: number;
+}
+
+interface RedisConfig {
+  url: string;
+  retryDelayOnFailover?: number;
+  maxRetriesPerRequest?: number;
+}
+
+interface BotConfig {
+  token: string;
+  webhookUrl?: string | undefined;
+  webhookSecret?: string | undefined;
+}
+
+interface PaymentConfig {
+  providerToken: string;
+  webhookSecret?: string | undefined;
+}
+
+interface ImageConfig {
+  cdnBaseUrl: string;
+  spriteBasePath: string;
+  assetsPath: string;
+}
+
+interface GameConfig {
+  maxCharactersPerUser: number;
+  maxInventorySlots: number;
+  baseInventorySlots: number;
+  baseHpPerLevel: number;
+  baseMpPerLevel: number;
+  baseAttackPerLevel: number;
+  baseDefensePerLevel: number;
+  baseSpeedPerLevel: number;
+  baseCritChancePerLevel: number;
+  classStatBonuses: Record<CharacterClass, Record<string, number>>;
+  itemDropRates: Record<ItemRarity, number>;
+}
+
+interface AppConfig {
+  port: number;
+  environment: 'development' | 'production' | 'test';
+  logLevel: 'error' | 'warn' | 'info' | 'debug';
+  database: DatabaseConfig;
+  redis: RedisConfig;
+  bot: BotConfig;
+  payment: PaymentConfig;
+  image: ImageConfig;
+  game: GameConfig;
+}
 
 dotenv.config();
 
@@ -16,49 +83,49 @@ for (const envVar of requiredEnvVars) {
 }
 
 export const config: AppConfig = {
-  port: parseInt(process.env.PORT || '3000', 10),
-  environment: (process.env.NODE_ENV as 'development' | 'production' | 'test') || 'development',
-  logLevel: (process.env.LOG_LEVEL as 'error' | 'warn' | 'info' | 'debug') || 'info',
+  port: parseInt(process.env['PORT'] || '3000', 10),
+  environment: (process.env['NODE_ENV'] as 'development' | 'production' | 'test') || 'development',
+  logLevel: (process.env['LOG_LEVEL'] as 'error' | 'warn' | 'info' | 'debug') || 'info',
 
   database: {
-    url: process.env.DATABASE_URL!,
-    maxConnections: parseInt(process.env.DB_MAX_CONNECTIONS || '10', 10),
-    connectionTimeout: parseInt(process.env.DB_CONNECTION_TIMEOUT || '60000', 10),
+    url: process.env['DATABASE_URL']!,
+    maxConnections: parseInt(process.env['DB_MAX_CONNECTIONS'] || '10', 10),
+    connectionTimeout: parseInt(process.env['DB_CONNECTION_TIMEOUT'] || '60000', 10),
   },
 
   redis: {
-    url: process.env.REDIS_URL || 'redis://localhost:6379/0',
-    retryDelayOnFailover: parseInt(process.env.REDIS_RETRY_DELAY || '100', 10),
-    maxRetriesPerRequest: parseInt(process.env.REDIS_MAX_RETRIES || '3', 10),
+    url: process.env['REDIS_URL'] || 'redis://localhost:6379/0',
+    retryDelayOnFailover: parseInt(process.env['REDIS_RETRY_DELAY'] || '100', 10),
+    maxRetriesPerRequest: parseInt(process.env['REDIS_MAX_RETRIES'] || '3', 10),
   },
 
   bot: {
-    token: process.env.BOT_TOKEN!,
-    webhookUrl: process.env.WEBHOOK_URL,
-    webhookSecret: process.env.WEBHOOK_SECRET,
+    token: process.env['BOT_TOKEN']!,
+    webhookUrl: process.env['WEBHOOK_URL'],
+    webhookSecret: process.env['WEBHOOK_SECRET'],
   },
 
   payment: {
-    providerToken: process.env.TELEGRAM_PAYMENT_PROVIDER_TOKEN || '',
-    webhookSecret: process.env.WEBHOOK_SECRET_KEY,
+    providerToken: process.env['TELEGRAM_PAYMENT_PROVIDER_TOKEN'] || '',
+    webhookSecret: process.env['WEBHOOK_SECRET_KEY'],
   },
 
   image: {
-    cdnBaseUrl: process.env.CDN_BASE_URL || 'https://cdn.example.com',
-    spriteBasePath: process.env.SPRITE_BASE_PATH || '/sprites',
-    assetsPath: process.env.ASSETS_PATH || 'assets/sprites',
+    cdnBaseUrl: process.env['CDN_BASE_URL'] || 'https://cdn.example.com',
+    spriteBasePath: process.env['SPRITE_BASE_PATH'] || '/sprites',
+    assetsPath: process.env['ASSETS_PATH'] || 'assets/sprites',
   },
 
   game: {
-    maxCharactersPerUser: parseInt(process.env.MAX_CHARACTERS_PER_USER || '3', 10),
-    maxInventorySlots: parseInt(process.env.MAX_INVENTORY_SLOTS || '30', 10),
-    baseInventorySlots: parseInt(process.env.BASE_INVENTORY_SLOTS || '20', 10),
-    baseHpPerLevel: parseInt(process.env.BASE_HP_PER_LEVEL || '20', 10),
-    baseMpPerLevel: parseInt(process.env.BASE_MP_PER_LEVEL || '10', 10),
-    baseAttackPerLevel: parseInt(process.env.BASE_ATTACK_PER_LEVEL || '2', 10),
-    baseDefensePerLevel: parseFloat(process.env.BASE_DEFENSE_PER_LEVEL || '1.5'),
-    baseSpeedPerLevel: parseFloat(process.env.BASE_SPEED_PER_LEVEL || '0.5'),
-    baseCritChancePerLevel: parseFloat(process.env.BASE_CRIT_CHANCE_PER_LEVEL || '0.002'),
+    maxCharactersPerUser: parseInt(process.env['MAX_CHARACTERS_PER_USER'] || '3', 10),
+    maxInventorySlots: parseInt(process.env['MAX_INVENTORY_SLOTS'] || '30', 10),
+    baseInventorySlots: parseInt(process.env['BASE_INVENTORY_SLOTS'] || '20', 10),
+    baseHpPerLevel: parseInt(process.env['BASE_HP_PER_LEVEL'] || '20', 10),
+    baseMpPerLevel: parseInt(process.env['BASE_MP_PER_LEVEL'] || '10', 10),
+    baseAttackPerLevel: parseInt(process.env['BASE_ATTACK_PER_LEVEL'] || '2', 10),
+    baseDefensePerLevel: parseFloat(process.env['BASE_DEFENSE_PER_LEVEL'] || '1.5'),
+    baseSpeedPerLevel: parseFloat(process.env['BASE_SPEED_PER_LEVEL'] || '0.5'),
+    baseCritChancePerLevel: parseFloat(process.env['BASE_CRIT_CHANCE_PER_LEVEL'] || '0.002'),
 
     classStatBonuses: {
       [CharacterClass.WARRIOR]: {

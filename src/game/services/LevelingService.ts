@@ -94,7 +94,7 @@ export class LevelingService {
     const classBonuses = config.game.classStatBonuses[characterClass];
     for (const [stat, bonus] of Object.entries(classBonuses)) {
       if (stat in newStats) {
-        (newStats as any)[stat] += bonus * levelsGained;
+        (newStats as any)[stat] += (bonus as number) * levelsGained;
       }
     }
 

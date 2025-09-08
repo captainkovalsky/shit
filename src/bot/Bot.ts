@@ -6,34 +6,10 @@ import { CharacterService } from '@/database/services/CharacterService';
 import { LevelingService } from '@/game/services/LevelingService';
 import { ImageService } from '@/image/ImageService';
 
-interface CharacterStats {
-  hp: number;
-  mp: number;
-  attack: number;
-  defense: number;
-  speed: number;
-  critChance: number;
-  strength: number;
-  agility: number;
-  intelligence: number;
-}
-
-interface Equipment {
-  weapon?: string;
-  helmet?: string;
-  armor?: string;
-  boots?: string;
-  accessory?: string;
-}
-
-interface CharacterCreationSession extends Scenes.SceneSessionData {
-  characterClass?: CharacterClass;
-  characterName?: string;
-}
-
 interface CombatSession extends Scenes.SceneSessionData {
   battleId?: string;
   characterId?: string;
+  characterClass?: CharacterClass;
 }
 
 interface BotContext extends Context {
@@ -100,8 +76,10 @@ export class Bot {
     });
 
     characterCreationScene.action(/^class_(.+)$/, async (ctx) => {
-      const characterClass = ctx.match[1].toUpperCase() as CharacterClass;
-      ctx.session.characterClass = characterClass;
+      const characterClass = ctx.match?.[1]?.toUpperCase() as CharacterClass;
+      if (characterClass) {
+        (ctx.session as any).characterClass = characterClass;
+      }
       
       await ctx.editMessageText(
         `Great choice! You selected ${characterClass}.\n\n` +
@@ -191,8 +169,10 @@ export class Bot {
 
   private setupCallbacks(): void {
     this.bot.action(/^class_(.+)$/, async (ctx) => {
-      const characterClass = ctx.match[1].toUpperCase() as CharacterClass;
-      ctx.session.characterClass = characterClass;
+      const characterClass = ctx.match?.[1]?.toUpperCase() as CharacterClass;
+      if (characterClass) {
+        (ctx.session as any).characterClass = characterClass;
+      }
       
       await ctx.editMessageText(
         `Great choice! You selected ${characterClass}.\n\n` +
@@ -201,7 +181,7 @@ export class Bot {
     });
 
     this.bot.on('text', async (ctx) => {
-      if (ctx.session.characterClass && !ctx.message.text.startsWith('/')) {
+      if ((ctx.session as any).characterClass && !ctx.message.text.startsWith('/')) {
         const name = ctx.message.text.trim();
         
         if (name.length < 2 || name.length > 20) {
@@ -229,39 +209,40 @@ export class Bot {
           return;
         }
 
-        const stats = LevelingService.createBaseStats(ctx.session.characterClass);
-        const equipment: Equipment = {};
+        const stats = LevelingService.createBaseStats((ctx.session as any).characterClass);
+        const equipment = {};
         
         const character = await this.characterService.createCharacter(
           user.id,
           name,
-          ctx.session.characterClass,
+          (ctx.session as any).characterClass,
           stats,
           equipment
         );
 
-        const spriteUrl = await this.imageService.generateCharacterSprite(character);
+        const spriteUrl = await this.imageService.generateCharacterSprite(character as any);
         await this.characterService.updateSpriteUrl(character.id, spriteUrl);
 
-        const cardUrl = await this.imageService.generateCharacterCard(character, spriteUrl);
+        const cardUrl = await this.imageService.generateCharacterCard(character as any, spriteUrl);
 
         await ctx.replyWithPhoto(
           { url: cardUrl },
           {
             caption: `🎉 Character created successfully!\n\n` +
                     `Name: ${name}\n` +
-                    `Class: ${ctx.session.characterClass}\n` +
+                    `Class: ${(ctx.session as any).characterClass}\n` +
                     `Level: 1\n\n` +
                     `Use /menu to access the main menu.`
           }
         );
 
-        ctx.session.characterClass = undefined;
+        (ctx.session as any).characterClass = undefined;
       }
     });
 
     this.bot.action(/^select_char_(.+)$/, async (ctx) => {
-      const characterId = ctx.match[1];
+      const characterId = ctx.match?.[1];
+      if (!characterId) return;
       const character = await this.characterService.getCharacterById(characterId);
       
       if (character) {
@@ -272,7 +253,8 @@ export class Bot {
     });
 
     this.bot.action(/^char_info_(.+)$/, async (ctx) => {
-      const characterId = ctx.match[1];
+      const characterId = ctx.match?.[1];
+      if (!characterId) return;
       const character = await this.characterService.getCharacterById(characterId);
       
       if (!character) {
@@ -281,10 +263,11 @@ export class Bot {
       }
 
       const cardUrl = await this.imageService.generateCharacterCard(
-        character,
+        character as any,
         character.spriteUrl || ''
       );
 
+      const stats = character.stats as any;
       await ctx.replyWithPhoto(
         { url: cardUrl },
         {
@@ -294,21 +277,22 @@ export class Bot {
                   `Level: ${character.level}\n` +
                   `XP: ${character.xp}\n\n` +
                   `Stats:\n` +
-                  `❤️ HP: ${character.stats.hp}\n` +
-                  `💙 MP: ${character.stats.mp}\n` +
-                  `⚔️ Attack: ${character.stats.attack}\n` +
-                  `🛡️ Defense: ${character.stats.defense}\n` +
-                  `🏃 Speed: ${character.stats.speed}\n` +
-                  `💥 Crit Chance: ${(character.stats.critChance * 100).toFixed(1)}%\n` +
-                  `💪 Strength: ${character.stats.strength}\n` +
-                  `🏃 Agility: ${character.stats.agility}\n` +
-                  `🧠 Intelligence: ${character.stats.intelligence}`
+                  `❤️ HP: ${stats.hp}\n` +
+                  `💙 MP: ${stats.mp}\n` +
+                  `⚔️ Attack: ${stats.attack}\n` +
+                  `🛡️ Defense: ${stats.defense}\n` +
+                  `🏃 Speed: ${stats.speed}\n` +
+                  `💥 Crit Chance: ${(stats.critChance * 100).toFixed(1)}%\n` +
+                  `💪 Strength: ${stats.strength}\n` +
+                  `🏃 Agility: ${stats.agility}\n` +
+                  `🧠 Intelligence: ${stats.intelligence}`
         }
       );
     });
 
     this.bot.action(/^battle_(.+)$/, async (ctx) => {
-      const characterId = ctx.match[1];
+      const characterId = ctx.match?.[1];
+      if (!characterId) return;
       const character = await this.characterService.getCharacterById(characterId);
       
       if (!character) {
@@ -317,15 +301,15 @@ export class Bot {
       }
 
       await ctx.scene.enter('combat');
-      ctx.session.battleId = 'battle_' + Date.now();
-      ctx.session.characterId = characterId;
+      (ctx.session as any).battleId = 'battle_' + Date.now();
+      (ctx.session as any).characterId = characterId;
 
       await ctx.editMessageText(
         `⚔️ Battle Started!\n\n` +
         `Enemy: Goblin (Level ${character.level})\n` +
         `Enemy HP: ${50 + character.level * 10}\n\n` +
-        `Your HP: ${character.stats.hp}\n` +
-        `Your MP: ${character.stats.mp}\n\n` +
+        `Your HP: ${(character.stats as any).hp}\n` +
+        `Your MP: ${(character.stats as any).mp}\n\n` +
         `Choose your action:`,
         {
           reply_markup: {

@@ -6,7 +6,6 @@ import rateLimit from 'express-rate-limit';
 import { config } from '@/config';
 import { errorHandler } from '@/api/middleware/errorHandler';
 import { requestLogger } from '@/api/middleware/requestLogger';
-import { authMiddleware } from '@/api/middleware/auth';
 import { userRoutes } from '@/api/routes/userRoutes';
 import { characterRoutes } from '@/api/routes/characterRoutes';
 import { battleRoutes } from '@/api/routes/battleRoutes';
@@ -51,12 +50,12 @@ export class ApiServer {
 
     this.app.use(requestLogger);
 
-    this.app.get('/health', (req, res) => {
+    this.app.get('/health', (_req, res) => {
       res.json({
         status: 'healthy',
         timestamp: new Date().toISOString(),
         environment: config.environment,
-        version: process.env.npm_package_version || '1.0.0',
+        version: process.env['npm_package_version'] || '1.0.0',
       });
     });
   }

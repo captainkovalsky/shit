@@ -69,9 +69,10 @@ export class CharacterService {
   }
 
   async updateCharacter(id: string, data: Partial<Character>): Promise<Character> {
+    const { userId, ...updateData } = data;
     return this.db.character.update({
       where: { id },
-      data,
+      data: updateData as any,
     });
   }
 

@@ -16,7 +16,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction): 
       console.log(`${req.method} ${req.path} - ${res.statusCode} - ${duration}ms`);
     }
 
-    originalEnd.call(this, chunk, encoding);
+    return originalEnd.call(this, chunk, encoding);
   };
 
   next();
