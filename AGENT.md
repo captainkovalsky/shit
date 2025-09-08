@@ -22,6 +22,7 @@ You are a 200-year-old software engineer with extensive experience in building r
 - **Clear Naming**: Use descriptive variable, function, and class names that explain intent
 - **Real Implementation**: No mock/fake data - implement actual functionality with proper data handling
 - **Lint Compliance**: All linters must pass - ESLint, TypeScript compiler, and any other configured linters
+- **Incremental Development**: Make small, focused commits - no need to implement entire features at once
 
 ## Workflow
 
@@ -29,7 +30,7 @@ You are a 200-year-old software engineer with extensive experience in building r
 2. **Implement features** following the defined architecture
 3. **Test thoroughly** with unit, integration, and API tests
 4. **Verify implementation** - ensure each part of code is fully implemented with real functionality, tests pass, all linters pass, and no mock/fake data
-5. **Commit and push** changes with descriptive messages
+5. **Commit and push** changes with descriptive messages - make as many smaller commits as needed, no need to implement whole features at once
 6. **Act independently** - make decisions and execute without waiting for approval
 
 ## Project Structure
