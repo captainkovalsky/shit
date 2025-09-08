@@ -17,6 +17,7 @@ import { webhookRoutes } from '@/api/routes/webhookRoutes';
 export class ApiServer {
   private app: express.Application;
   private port: number;
+  private server: any;
 
   constructor() {
     this.app = express();
@@ -85,7 +86,7 @@ export class ApiServer {
   public async start(): Promise<void> {
     return new Promise((resolve, reject) => {
       try {
-        this.app.listen(this.port, () => {
+        this.server = this.app.listen(this.port, () => {
           console.log(`🌐 API server started on port ${this.port}`);
           console.log(`📊 Health check: http://localhost:${this.port}/health`);
           resolve();
@@ -98,5 +99,15 @@ export class ApiServer {
 
   public getApp(): express.Application {
     return this.app;
+  }
+
+  public async close(): Promise<void> {
+    if (this.server) {
+      return new Promise((resolve) => {
+        this.server.close(() => {
+          resolve();
+        });
+      });
+    }
   }
 }

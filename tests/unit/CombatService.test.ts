@@ -109,7 +109,7 @@ describe('CombatService', () => {
     };
 
     it('should execute basic attack turn', () => {
-      const result = CombatService.executeTurn(
+      const result = CombatService.simulateTurn(
         characterStats,
         enemy,
         'attack',
@@ -126,7 +126,7 @@ describe('CombatService', () => {
     });
 
     it('should execute skill turn', () => {
-      const result = CombatService.executeTurn(
+      const result = CombatService.simulateTurn(
         characterStats,
         enemy,
         'skill',
@@ -142,10 +142,10 @@ describe('CombatService', () => {
     });
 
     it('should handle flee action', () => {
-      const result = CombatService.executeTurn(
+      const result = CombatService.simulateTurn(
         characterStats,
         enemy,
-        'flee',
+        'run',
         undefined
       );
 
@@ -157,7 +157,7 @@ describe('CombatService', () => {
     it('should handle insufficient MP for skill', () => {
       const lowMpStats = { ...characterStats, mp: 0 };
       
-      const result = CombatService.executeTurn(
+      const result = CombatService.simulateTurn(
         lowMpStats,
         enemy,
         'skill',
@@ -172,24 +172,24 @@ describe('CombatService', () => {
 
   describe('calculateBattleRating', () => {
     it('should return positive rating for higher level character', () => {
-      const rating = CombatService.calculateBattleRating(5, 3);
+      const rating = CombatService.calculateBattleRating(5, 3, 'WIN');
       expect(rating).toBeGreaterThan(0);
     });
 
     it('should return negative rating for lower level character', () => {
-      const rating = CombatService.calculateBattleRating(3, 5);
+      const rating = CombatService.calculateBattleRating(3, 5, 'LOSE');
       expect(rating).toBeLessThan(0);
     });
 
     it('should return zero rating for same level', () => {
-      const rating = CombatService.calculateBattleRating(5, 5);
+      const rating = CombatService.calculateBattleRating(5, 5, 'WIN');
       expect(rating).toBe(0);
     });
   });
 
   describe('getSkillData', () => {
     it('should return skill data for valid skill', () => {
-      const skillData = CombatService.getSkillData(characterStats, 'fireball');
+      const skillData = CombatService.getSkillData(CharacterClass.MAGE, 'fireball');
       
       expect(skillData).toHaveProperty('damageMultiplier');
       expect(skillData).toHaveProperty('mpCost');
@@ -198,7 +198,7 @@ describe('CombatService', () => {
     });
 
     it('should return default skill data for invalid skill', () => {
-      const skillData = CombatService.getSkillData(characterStats, 'invalid_skill');
+      const skillData = CombatService.getSkillData(CharacterClass.MAGE, 'invalid_skill');
       
       expect(skillData).toHaveProperty('damageMultiplier');
       expect(skillData).toHaveProperty('mpCost');

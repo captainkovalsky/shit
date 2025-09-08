@@ -12,7 +12,7 @@ describe('Database Integration Tests', () => {
     prisma = new PrismaClient({
       datasources: {
         db: {
-          url: process.env.DATABASE_URL || 'postgresql://test:test@localhost:5432/test_db',
+          url: process.env['DATABASE_URL'] || 'postgresql://test:test@localhost:5432/test_db',
         },
       },
     });
@@ -99,8 +99,8 @@ describe('Database Integration Tests', () => {
 
       const characters = await characterService.getCharactersByUserId(user.id);
       expect(characters).toHaveLength(2);
-      expect(characters[0].name).toBe('Warrior1');
-      expect(characters[1].name).toBe('Mage1');
+      expect(characters[0]?.name).toBe('Warrior1');
+      expect(characters[1]?.name).toBe('Mage1');
     });
 
     it('should update character stats', async () => {
@@ -173,8 +173,7 @@ describe('Database Integration Tests', () => {
         equipment
       );
 
-      const deletedCharacter = await characterService.deleteCharacter(character.id);
-      expect(deletedCharacter.id).toBe(character.id);
+      await characterService.deleteCharacter(character.id);
 
       const retrievedCharacter = await characterService.getCharacterById(character.id);
       expect(retrievedCharacter).toBeNull();

@@ -20,12 +20,7 @@ describe('Bot Tests', () => {
     mockCharacterService = new CharacterService() as jest.Mocked<CharacterService>;
     mockImageService = new ImageService() as jest.Mocked<ImageService>;
 
-    bot = new Bot(
-      'test-token',
-      mockUserService,
-      mockCharacterService,
-      mockImageService
-    );
+    bot = new Bot();
   });
 
   afterEach(() => {

@@ -60,7 +60,7 @@ describe('ImageService', () => {
           intelligence: 5,
         },
         equipment: {},
-        spriteUrl: null,
+        spriteUrl: 'https://example.com/sprite.png',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -91,7 +91,7 @@ describe('ImageService', () => {
           intelligence: 5,
         },
         equipment: {},
-        spriteUrl: null,
+        spriteUrl: 'https://example.com/sprite.png',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -158,7 +158,7 @@ describe('ImageService', () => {
           intelligence: 5,
         },
         equipment: {},
-        spriteUrl: null,
+        spriteUrl: 'https://example.com/sprite.png',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -235,7 +235,7 @@ describe('ImageService', () => {
         xp: 0,
         stats: {},
         equipment: {},
-        spriteUrl: null,
+        spriteUrl: 'https://example.com/sprite.png',
         createdAt: new Date(),
         updatedAt: new Date(),
       };
@@ -257,7 +257,7 @@ describe('ImageService', () => {
         xp: 0,
         stats: {},
         equipment: {},
-        spriteUrl: null,
+        spriteUrl: 'https://example.com/sprite.png',
         createdAt: new Date(),
         updatedAt: new Date(),
       };

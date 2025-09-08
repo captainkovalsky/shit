@@ -215,28 +215,15 @@ describe('CharacterService', () => {
 
   describe('deleteCharacter', () => {
     it('should delete character successfully', async () => {
-      const mockCharacter = {
-        id: 'char1',
-        userId: 'user1',
-        name: 'TestWarrior',
-        class: CharacterClass.WARRIOR,
-        level: 5,
-        xp: 1000,
-        stats: {},
-        equipment: {},
-        spriteUrl: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-      };
 
-      mockPrisma.character.delete.mockResolvedValue(mockCharacter);
+      mockPrisma.character.delete.mockResolvedValue(undefined);
 
       const result = await characterService.deleteCharacter('char1');
 
       expect(mockPrisma.character.delete).toHaveBeenCalledWith({
         where: { id: 'char1' },
       });
-      expect(result).toEqual(mockCharacter);
+      expect(result).toBeUndefined();
     });
   });
 });

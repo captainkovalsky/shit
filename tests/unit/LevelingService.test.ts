@@ -60,7 +60,7 @@ describe('LevelingService', () => {
     };
 
     it('should add XP without leveling up', () => {
-      const result = LevelingService.addXp(1, 50, baseStats, CharacterClass.WARRIOR);
+      const result = LevelingService.addXp(1, 0, 50, CharacterClass.WARRIOR, baseStats);
 
       expect(result.oldLevel).toBe(1);
       expect(result.newLevel).toBe(1);
@@ -71,7 +71,7 @@ describe('LevelingService', () => {
     });
 
     it('should level up when XP threshold is reached', () => {
-      const result = LevelingService.addXp(1, 200, baseStats, CharacterClass.WARRIOR);
+      const result = LevelingService.addXp(1, 0, 200, CharacterClass.WARRIOR, baseStats);
 
       expect(result.oldLevel).toBe(1);
       expect(result.newLevel).toBeGreaterThan(1);
@@ -82,7 +82,7 @@ describe('LevelingService', () => {
     });
 
     it('should apply stat bonuses for level ups', () => {
-      const result = LevelingService.addXp(1, 500, baseStats, CharacterClass.WARRIOR);
+      const result = LevelingService.addXp(1, 0, 500, CharacterClass.WARRIOR, baseStats);
 
       if (result.newStats) {
         expect(result.newStats.hp).toBeGreaterThan(baseStats.hp);

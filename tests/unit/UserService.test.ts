@@ -39,7 +39,7 @@ describe('UserService', () => {
         updatedAt: new Date(),
       };
 
-      mockPrisma.user.create.mockResolvedValue(mockUser);
+      (mockPrisma.user.create as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await userService.createUser(BigInt(123456789), 'testuser');
 
@@ -65,7 +65,7 @@ describe('UserService', () => {
         updatedAt: new Date(),
       };
 
-      mockPrisma.user.create.mockResolvedValue(mockUser);
+      (mockPrisma.user.create as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await userService.createUser(BigInt(123456789));
 
@@ -93,7 +93,7 @@ describe('UserService', () => {
         updatedAt: new Date(),
       };
 
-      mockPrisma.user.findUnique.mockResolvedValue(mockUser);
+      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await userService.getUserByTelegramId(BigInt(123456789));
 
@@ -104,7 +104,7 @@ describe('UserService', () => {
     });
 
     it('should return null when user not found', async () => {
-      mockPrisma.user.findUnique.mockResolvedValue(null);
+      (mockPrisma.user.findUnique as jest.Mock).mockResolvedValue(null);
 
       const result = await userService.getUserByTelegramId(BigInt(123456789));
 
@@ -124,7 +124,7 @@ describe('UserService', () => {
         updatedAt: new Date(),
       };
 
-      mockPrisma.user.update.mockResolvedValue(mockUser);
+      (mockPrisma.user.update as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await userService.updateUser('1', { gold: 200, gems: 10 });
 
@@ -148,7 +148,7 @@ describe('UserService', () => {
         updatedAt: new Date(),
       };
 
-      mockPrisma.user.delete.mockResolvedValue(mockUser);
+      (mockPrisma.user.delete as jest.Mock).mockResolvedValue(mockUser);
 
       const result = await userService.deleteUser('1');
 

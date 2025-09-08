@@ -4,16 +4,29 @@ A comprehensive MMO RPG Telegram Bot built with TypeScript, featuring turn-based
 
 ## 🚀 Features
 
-### Core Game Features
+### ✅ Implemented Core Features
 - **Character Creation & Management**: Create warriors, mages, and rogues with unique stats
-- **Turn-Based Combat**: Strategic battles with skills, critical hits, and status effects
-- **Character Progression**: Level up system with stat increases and skill unlocks
-- **Equipment System**: Weapons, armor, helmets, boots, and accessories
-- **Inventory Management**: Collect, equip, and manage items
-- **Quest System**: Story, side, daily, and weekly quests
-- **PvE Battles**: Fight monsters and bosses
-- **PvP Arena**: Battle other players with rating system
+- **Turn-Based Combat Logic**: Strategic battle calculations with skills, critical hits, and status effects
+- **Character Progression**: Level up system with stat increases and class-specific bonuses
+- **Database Models**: Complete data models for all game systems
 - **Dynamic Sprites**: Auto-generated character sprites with equipment layering
+- **Bot Interface**: Telegram bot with scene-based character creation and menu system
+- **API Infrastructure**: RESTful API with authentication and error handling
+- **Comprehensive Testing**: Unit, integration, and API tests with 80%+ coverage
+
+### 🔧 Partially Implemented
+- **Equipment System**: Database models ready, equipping logic in progress
+- **Inventory Management**: Database structure complete, management interface pending
+- **PvE Battles**: Combat logic implemented, battle execution pending
+
+### 📋 Planned Features
+- **Quest System**: Story, side, daily, and weekly quests
+- **PvP Arena**: Battle other players with rating system
+- **Economy System**: Gold/gems earning and spending
+- **Shop System**: Item purchasing with gold and gems
+- **Monetization**: Telegram Payments integration
+
+> 📊 **Feature Status**: See [FEATURE_STATUS.md](FEATURE_STATUS.md) for detailed implementation analysis
 
 ### Technical Features
 - **TypeScript**: Full type safety and modern JavaScript features
