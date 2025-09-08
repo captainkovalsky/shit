@@ -10,6 +10,7 @@ interface CharacterStats {
   strength: number;
   agility: number;
   intelligence: number;
+  class: CharacterClass;
 }
 
 interface Enemy {
@@ -152,7 +153,7 @@ export class CombatService {
       charMpCost = 0;
       log = `You attack for ${charDamage} damage${isCrit ? ' (Critical Hit!)' : ''}`;
     } else if (action === 'skill' && skillId) {
-      const skillData = this.getSkillData(characterStats as any, skillId);
+      const skillData = this.getSkillData(characterStats.class as CharacterClass, skillId);
       
       if (characterStats.mp < skillData.mpCost) {
         return {
@@ -215,6 +216,7 @@ export class CombatService {
         strength: 0,
         agility: 0,
         intelligence: 0,
+        class: CharacterClass.WARRIOR,
       },
       characterStats,
       1.0,

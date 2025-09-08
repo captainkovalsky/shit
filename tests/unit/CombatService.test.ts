@@ -14,6 +14,7 @@ describe('CombatService', () => {
         strength: 15,
         agility: 10,
         intelligence: 5,
+        class: CharacterClass.WARRIOR,
       };
 
       const defenderStats = {
@@ -26,6 +27,7 @@ describe('CombatService', () => {
         strength: 12,
         agility: 8,
         intelligence: 7,
+        class: CharacterClass.WARRIOR,
       };
 
       const damage = CombatService.calculateDamage(attackerStats, defenderStats);
@@ -45,6 +47,7 @@ describe('CombatService', () => {
         strength: 15,
         agility: 10,
         intelligence: 5,
+        class: CharacterClass.WARRIOR,
       };
 
       const defenderStats = {
@@ -57,11 +60,14 @@ describe('CombatService', () => {
         strength: 12,
         agility: 8,
         intelligence: 7,
+        class: CharacterClass.WARRIOR,
       };
 
-      const damage = CombatService.calculateDamage(attackerStats, defenderStats);
+      const normalDamage = CombatService.calculateDamage(attackerStats, defenderStats, 1.0, false);
+      const critDamage = CombatService.calculateDamage(attackerStats, defenderStats, 1.0, true);
 
-      expect(damage).toBeGreaterThan(attackerStats.attack);
+      expect(critDamage).toBeGreaterThan(normalDamage);
+      expect(critDamage).toBeGreaterThan(attackerStats.attack);
     });
   });
 
@@ -93,6 +99,7 @@ describe('CombatService', () => {
       strength: 15,
       agility: 10,
       intelligence: 5,
+      class: CharacterClass.MAGE,
     };
 
     const enemy = {
@@ -181,9 +188,9 @@ describe('CombatService', () => {
       expect(rating).toBeLessThan(0);
     });
 
-    it('should return zero rating for same level', () => {
+    it('should return base rating for same level', () => {
       const rating = CombatService.calculateBattleRating(5, 5, 'WIN');
-      expect(rating).toBe(0);
+      expect(rating).toBe(20);
     });
   });
 

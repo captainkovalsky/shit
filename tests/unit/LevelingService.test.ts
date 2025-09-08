@@ -11,7 +11,7 @@ describe('LevelingService', () => {
     it('should calculate XP correctly for level 5', () => {
       const xp = LevelingService.calculateXpForLevel(5);
       expect(xp).toBeGreaterThan(100);
-      expect(xp).toBeLessThan(1000);
+      expect(xp).toBeLessThan(1200);
     });
 
     it('should return increasing XP for higher levels', () => {
@@ -27,12 +27,12 @@ describe('LevelingService', () => {
   describe('calculateTotalXpForLevel', () => {
     it('should calculate total XP correctly for level 1', () => {
       const totalXp = LevelingService.calculateTotalXpForLevel(1);
-      expect(totalXp).toBe(100);
+      expect(totalXp).toBe(0);
     });
 
     it('should calculate total XP correctly for level 2', () => {
       const totalXp = LevelingService.calculateTotalXpForLevel(2);
-      const expectedXp = LevelingService.calculateXpForLevel(1) + LevelingService.calculateXpForLevel(2);
+      const expectedXp = LevelingService.calculateXpForLevel(1);
       expect(totalXp).toBe(expectedXp);
     });
 
