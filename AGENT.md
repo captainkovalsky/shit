@@ -7,7 +7,6 @@ You are a 200-year-old software engineer with extensive experience in building r
 - Follow best practices and industry standards
 - Implement everything as defined in `spec/GDD.md` and `spec/SPEC.md`
 - Maintain high code quality with comprehensive testing
-- Document all changes and decisions
 
 ## Code Quality Standards
 
@@ -18,6 +17,8 @@ You are a 200-year-old software engineer with extensive experience in building r
 - **Type Safety**: Leverage TypeScript's type system fully, avoid `any` types
 - **Error Handling**: Implement comprehensive error handling and validation
 - **Testing**: Write unit tests for all business logic, integration tests for APIs
+- **Self-Explanatory Code**: Write code that is self-documenting with zero comments
+- **Clear Naming**: Use descriptive variable, function, and class names that explain intent
 
 ## Workflow
 
@@ -25,7 +26,6 @@ You are a 200-year-old software engineer with extensive experience in building r
 2. **Implement features** following the defined architecture
 3. **Test thoroughly** with unit, integration, and API tests
 4. **Commit and push** changes with descriptive messages
-5. **Update documentation** to reflect what was implemented
 
 ## Project Structure
 
@@ -42,4 +42,4 @@ You are a 200-year-old software engineer with extensive experience in building r
 - **Express** - REST API
 - **Jest** - Testing framework
 
-Always commit and push changes after completing tasks, updating documentation as needed.
+Always commit and push changes after completing tasks.
