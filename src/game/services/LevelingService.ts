@@ -1,7 +1,7 @@
 import { CharacterClass } from '@prisma/client';
 import { config } from '@/config/index';
 
-interface CharacterStats {
+export interface CharacterStats {
   hp: number;
   mp: number;
   attack: number;
@@ -22,7 +22,19 @@ interface LevelUpResult {
   newStats?: CharacterStats;
 }
 
-export class LevelingService {
+export interface ILevelingService {
+  createBaseStats(characterClass: CharacterClass): CharacterStats;
+  calculateLevelUpStats(
+    currentStats: CharacterStats,
+    characterClass: CharacterClass,
+    newLevel: number
+  ): CharacterStats;
+  calculateXpRequired(level: number): number;
+  canLevelUp(currentXp: number, currentLevel: number): boolean;
+  getLevelFromXp(xp: number): number;
+}
+
+export class LevelingService implements ILevelingService {
   static calculateXpForLevel(level: number): number {
     return Math.floor(100 * Math.pow(level, 1.5));
   }
@@ -181,5 +193,35 @@ export class LevelingService {
 
   static isMaxLevel(level: number): boolean {
     return level >= this.getMaxLevel();
+  }
+
+  // Interface implementation methods
+  createBaseStats(characterClass: CharacterClass): CharacterStats {
+    return LevelingService.createBaseStats(characterClass, 1);
+  }
+
+  calculateLevelUpStats(
+    currentStats: CharacterStats,
+    characterClass: CharacterClass,
+    newLevel: number
+  ): CharacterStats {
+    const levelsGained = newLevel - 1; // Assuming starting from level 1
+    return LevelingService.applyLevelUpStats(currentStats, characterClass, levelsGained);
+  }
+
+  calculateXpRequired(level: number): number {
+    return LevelingService.calculateTotalXpForLevel(level);
+  }
+
+  canLevelUp(currentXp: number, currentLevel: number): boolean {
+    return LevelingService.canLevelUp(currentLevel, currentXp);
+  }
+
+  getLevelFromXp(xp: number): number {
+    let level = 1;
+    while (xp >= LevelingService.calculateTotalXpForLevel(level + 1)) {
+      level++;
+    }
+    return level;
   }
 }

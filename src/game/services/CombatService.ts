@@ -1,6 +1,6 @@
 import { CharacterClass } from '@prisma/client';
 
-interface CharacterStats {
+export interface CharacterStats {
   hp: number;
   mp: number;
   attack: number;
@@ -13,7 +13,7 @@ interface CharacterStats {
   class: CharacterClass;
 }
 
-interface Enemy {
+export interface Enemy {
   name: string;
   level: number;
   hp: number;
@@ -27,7 +27,7 @@ interface Enemy {
   specialAbilities?: string[];
 }
 
-interface SkillData {
+export interface SkillData {
   damageMultiplier: number;
   mpCost: number;
   critBonus?: number;
@@ -41,7 +41,7 @@ interface SkillData {
   multiHit?: number;
 }
 
-interface TurnResult {
+export interface TurnResult {
   characterHp: number;
   characterMp: number;
   enemyHp: number;
@@ -53,8 +53,31 @@ interface TurnResult {
   error?: string;
 }
 
-export class CombatService {
-  static calculateDamage(
+export interface ICombatService {
+  calculateDamage(
+    attackerStats: CharacterStats,
+    defenderStats: CharacterStats,
+    skillMultiplier?: number,
+    isCrit?: boolean
+  ): number;
+  isCriticalHit(critChance: number): boolean;
+  getSkillData(characterClass: CharacterClass, skillId: string): SkillData;
+  simulateTurn(
+    characterStats: CharacterStats,
+    enemy: Enemy,
+    action: 'attack' | 'skill' | 'item' | 'run',
+    skillId?: string
+  ): TurnResult;
+  calculateBattleRating(
+    characterLevel: number,
+    enemyLevel: number,
+    result: 'WIN' | 'LOSE' | 'FLED'
+  ): number;
+  generateEnemyStats(baseEnemy: Enemy, level: number): Enemy;
+}
+
+export class CombatService implements ICombatService {
+  calculateDamage(
     attackerStats: CharacterStats,
     defenderStats: CharacterStats,
     skillMultiplier: number = 1.0,
@@ -72,11 +95,11 @@ export class CombatService {
     return finalDamage;
   }
 
-  static isCriticalHit(critChance: number): boolean {
+  isCriticalHit(critChance: number): boolean {
     return Math.random() < critChance;
   }
 
-  static getSkillData(characterClass: CharacterClass, skillId: string): SkillData {
+  getSkillData(characterClass: CharacterClass, skillId: string): SkillData {
     const skills: Record<CharacterClass, Record<string, SkillData>> = {
       [CharacterClass.WARRIOR]: {
         shield_slam: {
@@ -137,7 +160,7 @@ export class CombatService {
     return skills[characterClass]?.[skillId] || { damageMultiplier: 1.0, mpCost: 0 };
   }
 
-  static simulateTurn(
+  simulateTurn(
     characterStats: CharacterStats,
     enemy: Enemy,
     action: 'attack' | 'skill' | 'item' | 'run',
@@ -153,7 +176,7 @@ export class CombatService {
       charMpCost = 0;
       log = `You attack for ${charDamage} damage${isCrit ? ' (Critical Hit!)' : ''}`;
     } else if (action === 'skill' && skillId) {
-      const skillData = this.getSkillData(characterStats.class as CharacterClass, skillId);
+      const skillData = this.getSkillData(characterStats.class, skillId);
       
       if (characterStats.mp < skillData.mpCost) {
         return {
@@ -250,7 +273,7 @@ export class CombatService {
     };
   }
 
-  static calculateBattleRating(
+  calculateBattleRating(
     characterLevel: number,
     enemyLevel: number,
     result: 'WIN' | 'LOSE' | 'FLED'
@@ -267,7 +290,7 @@ export class CombatService {
     }
   }
 
-  static generateEnemyStats(baseEnemy: Enemy, level: number): Enemy {
+  generateEnemyStats(baseEnemy: Enemy, level: number): Enemy {
     return {
       ...baseEnemy,
       level,
