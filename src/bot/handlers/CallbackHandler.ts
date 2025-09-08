@@ -2,6 +2,7 @@ import { CharacterClass } from '@prisma/client';
 import { config } from '@/config/index';
 import { IUserService } from '@/database/services/UserService';
 import { ICharacterService } from '@/database/services/CharacterService';
+import { IQuestService } from '@/database/services/QuestService';
 import { LevelingService } from '@/game/services/LevelingService';
 import { ImageService } from '@/image/ImageService';
 import { BotContext } from '../types';
@@ -10,6 +11,7 @@ export class CallbackHandler {
   constructor(
     private userService: IUserService,
     private characterService: ICharacterService,
+    private questService: IQuestService,
     private imageService: ImageService
   ) {}
 
@@ -172,6 +174,301 @@ export class CallbackHandler {
     );
 
     (ctx.session as any).characterClass = undefined;
+  }
+
+  async handleQuests(ctx: BotContext, characterId: string): Promise<void> {
+    const character = await this.characterService.getCharacterById(characterId);
+    
+    if (!character) {
+      await ctx.answerCbQuery('Character not found!');
+      return;
+    }
+
+    const availableQuests = await this.questService.getAvailableQuests(character.level);
+    const characterQuests = await this.questService.getCharacterQuests(characterId);
+    
+    const questsWithStatus = availableQuests.map(quest => {
+      const characterQuest = characterQuests.find(cq => cq.questId === quest.id);
+      return {
+        ...quest,
+        status: characterQuest?.status || 'AVAILABLE',
+        progress: characterQuest?.progress || {},
+      };
+    });
+
+    const availableQuestsList = questsWithStatus.filter(q => q.status === 'AVAILABLE');
+    const inProgressQuests = questsWithStatus.filter(q => q.status === 'IN_PROGRESS');
+    const completedQuests = questsWithStatus.filter(q => q.status === 'COMPLETED');
+
+    let message = `📜 Quest Journal - ${character.name}\n\n`;
+    
+    if (availableQuestsList.length > 0) {
+      message += `🆕 Available Quests (${availableQuestsList.length}):\n`;
+      availableQuestsList.forEach(quest => {
+        message += `• ${quest.title} (Level ${quest.levelReq})\n`;
+      });
+      message += '\n';
+    }
+
+    if (inProgressQuests.length > 0) {
+      message += `🔄 In Progress (${inProgressQuests.length}):\n`;
+      inProgressQuests.forEach(quest => {
+        const objective = quest.objective as any;
+        const progress = quest.progress as any;
+        const progressKey = `kill_${objective.target}`;
+        const currentCount = progress[progressKey]?.count || 0;
+        message += `• ${quest.title} - ${currentCount}/${objective.count} ${objective.target}s\n`;
+      });
+      message += '\n';
+    }
+
+    if (completedQuests.length > 0) {
+      message += `✅ Completed (${completedQuests.length}):\n`;
+      completedQuests.forEach(quest => {
+        message += `• ${quest.title}\n`;
+      });
+    }
+
+    if (availableQuestsList.length === 0 && inProgressQuests.length === 0 && completedQuests.length === 0) {
+      message += 'No quests available at your level.';
+    }
+
+    const keyboard = [];
+    
+    if (availableQuestsList.length > 0) {
+      availableQuestsList.forEach(quest => {
+        keyboard.push([{ 
+          text: `📜 ${quest.title}`, 
+          callback_data: `quest_accept_${characterId}_${quest.id}` 
+        }]);
+      });
+    }
+
+    if (inProgressQuests.length > 0) {
+      inProgressQuests.forEach(quest => {
+        keyboard.push([{ 
+          text: `🔄 ${quest.title}`, 
+          callback_data: `quest_progress_${characterId}_${quest.id}` 
+        }]);
+      });
+    }
+
+    if (completedQuests.length > 0) {
+      completedQuests.forEach(quest => {
+        keyboard.push([{ 
+          text: `✅ ${quest.title}`, 
+          callback_data: `quest_complete_${characterId}_${quest.id}` 
+        }]);
+      });
+    }
+
+    keyboard.push([{ text: '🔙 Back to Menu', callback_data: `select_char_${characterId}` }]);
+
+    await ctx.editMessageText(message, {
+      reply_markup: {
+        inline_keyboard: keyboard
+      }
+    });
+  }
+
+  async handleQuestAccept(ctx: BotContext, characterId: string, questId: string): Promise<void> {
+    try {
+      const character = await this.characterService.getCharacterById(characterId);
+      if (!character) {
+        await ctx.answerCbQuery('Character not found!');
+        return;
+      }
+
+      const quest = await this.questService.getQuestById(questId);
+      if (!quest) {
+        await ctx.answerCbQuery('Quest not found!');
+        return;
+      }
+
+      const requirements = await this.questService.checkQuestRequirements(characterId, questId);
+      if (!requirements.canAccept) {
+        await ctx.answerCbQuery(`Cannot accept quest: ${requirements.reason}`);
+        return;
+      }
+
+      await this.questService.acceptQuest(characterId, questId);
+      
+      const objective = quest.objective as any;
+      const rewards = quest.rewards as any;
+      
+      let message = `📜 Quest Accepted!\n\n`;
+      message += `**${quest.title}**\n`;
+      message += `${quest.description}\n\n`;
+      message += `**Objective:**\n`;
+      message += `• ${objective.type}: ${objective.target} (${objective.count})\n\n`;
+      message += `**Rewards:**\n`;
+      message += `• XP: ${rewards.xp}\n`;
+      message += `• Gold: ${rewards.gold}\n`;
+      if (rewards.items && rewards.items.length > 0) {
+        message += `• Items: ${rewards.items.join(', ')}\n`;
+      }
+
+      await ctx.editMessageText(message, {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '🔄 View Progress', callback_data: `quest_progress_${characterId}_${questId}` }],
+            [{ text: '📜 Back to Quests', callback_data: `quests_${characterId}` }]
+          ]
+        }
+      });
+    } catch (error) {
+      console.error('Error accepting quest:', error);
+      await ctx.answerCbQuery('Failed to accept quest. Please try again.');
+    }
+  }
+
+  async handleQuestProgress(ctx: BotContext, characterId: string, questId: string): Promise<void> {
+    try {
+      const character = await this.characterService.getCharacterById(characterId);
+      if (!character) {
+        await ctx.answerCbQuery('Character not found!');
+        return;
+      }
+
+      const quest = await this.questService.getQuestById(questId);
+      if (!quest) {
+        await ctx.answerCbQuery('Quest not found!');
+        return;
+      }
+
+      const characterQuests = await this.questService.getCharacterQuests(characterId);
+      const characterQuest = characterQuests.find(cq => cq.questId === questId);
+      
+      if (!characterQuest || characterQuest.status !== 'IN_PROGRESS') {
+        await ctx.answerCbQuery('Quest not in progress!');
+        return;
+      }
+
+      const objective = quest.objective as any;
+      const progress = characterQuest.progress as any;
+      const progressKey = `kill_${objective.target}`;
+      const currentCount = progress[progressKey]?.count || 0;
+      const isCompleted = currentCount >= objective.count;
+
+      let message = `🔄 Quest Progress\n\n`;
+      message += `**${quest.title}**\n`;
+      message += `${quest.description}\n\n`;
+      message += `**Objective:**\n`;
+      message += `• ${objective.type}: ${objective.target} (${currentCount}/${objective.count})\n\n`;
+      
+      if (isCompleted) {
+        message += `✅ **Quest Complete!**\n`;
+        message += `You can now claim your rewards.`;
+      } else {
+        const remaining = objective.count - currentCount;
+        message += `Progress: ${currentCount}/${objective.count} (${remaining} remaining)\n`;
+        message += `Keep fighting ${objective.target}s to complete this quest!`;
+      }
+
+      const keyboard = [];
+      if (isCompleted) {
+        keyboard.push([{ text: '🎁 Claim Rewards', callback_data: `quest_complete_${characterId}_${questId}` }]);
+      }
+      keyboard.push([{ text: '📜 Back to Quests', callback_data: `quests_${characterId}` }]);
+
+      await ctx.editMessageText(message, {
+        reply_markup: {
+          inline_keyboard: keyboard
+        }
+      });
+    } catch (error) {
+      console.error('Error viewing quest progress:', error);
+      await ctx.answerCbQuery('Failed to load quest progress. Please try again.');
+    }
+  }
+
+  async handleQuestComplete(ctx: BotContext, characterId: string, questId: string): Promise<void> {
+    try {
+      const character = await this.characterService.getCharacterById(characterId);
+      if (!character) {
+        await ctx.answerCbQuery('Character not found!');
+        return;
+      }
+
+      const quest = await this.questService.getQuestById(questId);
+      if (!quest) {
+        await ctx.answerCbQuery('Quest not found!');
+        return;
+      }
+
+      const characterQuests = await this.questService.getCharacterQuests(characterId);
+      const characterQuest = characterQuests.find(cq => cq.questId === questId);
+      
+      if (!characterQuest || characterQuest.status !== 'IN_PROGRESS') {
+        await ctx.answerCbQuery('Quest not in progress!');
+        return;
+      }
+
+      const objective = quest.objective as any;
+      const progress = characterQuest.progress as any;
+      const progressKey = `kill_${objective.target}`;
+      const currentCount = progress[progressKey]?.count || 0;
+      
+      if (currentCount < objective.count) {
+        await ctx.answerCbQuery('Quest not yet complete!');
+        return;
+      }
+
+      const { rewards } = await this.questService.completeQuest(characterId, questId);
+      
+      const user = await this.userService.getUserById(character.userId);
+      if (!user) {
+        await ctx.answerCbQuery('User not found!');
+        return;
+      }
+
+      await this.userService.addGold(user.id, rewards.gold);
+      
+      const levelUpResult = LevelingService.addXp(
+        character.level,
+        character.xp,
+        rewards.xp,
+        character.class,
+        character.stats as any
+      );
+
+      if (levelUpResult.levelsGained > 0) {
+        await this.characterService.levelUp(character.id, levelUpResult.newLevel, levelUpResult.newStats!);
+      } else {
+        await this.characterService.addXp(character.id, rewards.xp);
+      }
+
+      let message = `🎉 Quest Completed!\n\n`;
+      message += `**${quest.title}**\n\n`;
+      message += `**Rewards Received:**\n`;
+      message += `• XP: +${rewards.xp}\n`;
+      message += `• Gold: +${rewards.gold}\n`;
+      if (rewards.items && rewards.items.length > 0) {
+        message += `• Items: ${rewards.items.join(', ')}\n`;
+      }
+
+      if (levelUpResult.levelsGained > 0) {
+        message += `\n🎊 **LEVEL UP!**\n`;
+        message += `Level ${character.level} → Level ${levelUpResult.newLevel}\n`;
+        message += `+${levelUpResult.levelsGained} level(s) gained!\n`;
+        message += `\n**New Stats:**\n`;
+        Object.entries(levelUpResult.newStats!).forEach(([stat, value]) => {
+          message += `• ${stat}: ${value}\n`;
+        });
+      }
+
+      await ctx.editMessageText(message, {
+        reply_markup: {
+          inline_keyboard: [
+            [{ text: '📜 Back to Quests', callback_data: `quests_${characterId}` }],
+            [{ text: '🔙 Back to Menu', callback_data: `select_char_${characterId}` }]
+          ]
+        }
+      });
+    } catch (error) {
+      console.error('Error completing quest:', error);
+      await ctx.answerCbQuery('Failed to complete quest. Please try again.');
+    }
   }
 
   private async showCharacterMenu(ctx: BotContext, character: any): Promise<void> {

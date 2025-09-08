@@ -2,6 +2,7 @@ import { Scenes, Context } from 'telegraf';
 import { CharacterClass } from '@prisma/client';
 import { IUserService } from '@/database/services/UserService';
 import { ICharacterService } from '@/database/services/CharacterService';
+import { IQuestService } from '@/database/services/QuestService';
 import { ImageService } from '@/image/ImageService';
 
 export interface CombatSession extends Scenes.SceneSessionData {
@@ -15,5 +16,6 @@ export interface BotContext extends Context {
   scene: Scenes.SceneContextScene<BotContext, CombatSession>;
   userService: IUserService;
   characterService: ICharacterService;
+  questService: IQuestService;
   imageService: ImageService;
 }

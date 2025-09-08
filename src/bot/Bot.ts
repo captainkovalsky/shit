@@ -2,6 +2,7 @@ import { Telegraf, Scenes } from 'telegraf';
 import { config } from '@/config/index';
 import { UserService, IUserService } from '@/database/services/UserService';
 import { CharacterService, ICharacterService } from '@/database/services/CharacterService';
+import { QuestService, IQuestService } from '@/database/services/QuestService';
 import { ImageService } from '@/image/ImageService';
 import { CommandHandler } from './handlers/CommandHandler';
 import { CallbackHandler } from './handlers/CallbackHandler';
@@ -12,6 +13,7 @@ export class Bot {
   private bot: Telegraf<BotContext>;
   private userService: IUserService;
   private characterService: ICharacterService;
+  private questService: IQuestService;
   private imageService: ImageService;
   private commandHandler: CommandHandler;
   private callbackHandler: CallbackHandler;
@@ -20,6 +22,7 @@ export class Bot {
     this.bot = new Telegraf<BotContext>(config.bot.token);
     this.userService = new UserService();
     this.characterService = new CharacterService();
+    this.questService = new QuestService();
     this.imageService = new ImageService();
     
     this.commandHandler = new CommandHandler(
@@ -29,6 +32,7 @@ export class Bot {
     this.callbackHandler = new CallbackHandler(
       this.userService,
       this.characterService,
+      this.questService,
       this.imageService
     );
 
@@ -42,6 +46,7 @@ export class Bot {
     this.bot.use((ctx, next) => {
       ctx.userService = this.userService;
       ctx.characterService = this.characterService;
+      ctx.questService = this.questService;
       ctx.imageService = this.imageService;
       return next();
     });
@@ -113,6 +118,38 @@ export class Bot {
       const action = ctx.match?.[1];
       if (action) {
         await this.callbackHandler.handleBattleAction(ctx, action);
+      }
+    });
+
+    // Quest handlers
+    this.bot.action(/^quests_(.+)$/, async (ctx) => {
+      const characterId = ctx.match?.[1];
+      if (characterId) {
+        await this.callbackHandler.handleQuests(ctx, characterId);
+      }
+    });
+
+    this.bot.action(/^quest_accept_(.+)_(.+)$/, async (ctx) => {
+      const characterId = ctx.match?.[1];
+      const questId = ctx.match?.[2];
+      if (characterId && questId) {
+        await this.callbackHandler.handleQuestAccept(ctx, characterId, questId);
+      }
+    });
+
+    this.bot.action(/^quest_progress_(.+)_(.+)$/, async (ctx) => {
+      const characterId = ctx.match?.[1];
+      const questId = ctx.match?.[2];
+      if (characterId && questId) {
+        await this.callbackHandler.handleQuestProgress(ctx, characterId, questId);
+      }
+    });
+
+    this.bot.action(/^quest_complete_(.+)_(.+)$/, async (ctx) => {
+      const characterId = ctx.match?.[1];
+      const questId = ctx.match?.[2];
+      if (characterId && questId) {
+        await this.callbackHandler.handleQuestComplete(ctx, characterId, questId);
       }
     });
 
