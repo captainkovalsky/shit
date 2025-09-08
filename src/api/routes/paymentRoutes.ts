@@ -24,12 +24,12 @@ router.post('/intents', async (req: Request, res: Response) => {
       });
     }
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: { paymentIntent: result.paymentIntent },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to create payment intent',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -40,6 +40,14 @@ router.post('/intents', async (req: Request, res: Response) => {
 router.get('/intents/:paymentIntentId', async (req: Request, res: Response) => {
   try {
     const { paymentIntentId } = req.params;
+    
+    if (!paymentIntentId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Payment intent ID is required',
+      });
+    }
+    
     const paymentIntent = await paymentService.getPaymentIntent(paymentIntentId);
     
     if (!paymentIntent) {
@@ -49,12 +57,12 @@ router.get('/intents/:paymentIntentId', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { paymentIntent },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch payment intent',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -62,16 +70,16 @@ router.get('/intents/:paymentIntentId', async (req: Request, res: Response) => {
   }
 });
 
-router.get('/products', async (req: Request, res: Response) => {
+router.get('/products', async (_req: Request, res: Response) => {
   try {
     const products = paymentService.getAvailableProducts();
     
-    res.json({
+    return res.json({
       success: true,
       data: { products },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch products',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -82,14 +90,22 @@ router.get('/products', async (req: Request, res: Response) => {
 router.get('/history/:userId', async (req: Request, res: Response) => {
   try {
     const { userId } = req.params;
+    
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'User ID is required',
+      });
+    }
+    
     const history = await paymentService.getUserPaymentHistory(userId);
     
-    res.json({
+    return res.json({
       success: true,
       data: { history },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch payment history',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -128,7 +144,7 @@ router.post('/webhook/telegram', async (req: Request, res: Response) => {
         });
       }
 
-      res.json({
+      return res.json({
         success: true,
         data: { paymentIntent: result.paymentIntent },
       });
@@ -145,18 +161,18 @@ router.post('/webhook/telegram', async (req: Request, res: Response) => {
         });
       }
 
-      res.json({
+      return res.json({
         success: true,
         data: { paymentIntent: result.paymentIntent },
       });
     } else {
-      res.json({
+      return res.json({
         success: true,
         message: 'Event processed',
       });
     }
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to process webhook',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -184,12 +200,12 @@ router.post('/simulate/success', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { paymentIntent: result.paymentIntent },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to simulate payment success',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -217,12 +233,12 @@ router.post('/simulate/failure', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { paymentIntent: result.paymentIntent },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to simulate payment failure',
       message: error instanceof Error ? error.message : 'Unknown error',
