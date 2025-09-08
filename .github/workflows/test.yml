@@ -12,7 +12,7 @@ jobs:
     
     services:
       postgres:
-        image: postgres:13
+        image: postgres:15
         env:
           POSTGRES_PASSWORD: test
           POSTGRES_USER: test
@@ -26,7 +26,7 @@ jobs:
           - 5432:5432
       
       redis:
-        image: redis:6
+        image: redis:7
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -36,67 +36,47 @@ jobs:
           - 6379:6379
 
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
       with:
-        python-version: 3.9
-    
-    - name: Cache pip dependencies
-      uses: actions/cache@v3
-      with:
-        path: ~/.cache/pip
-        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
-        restore-keys: |
-          ${{ runner.os }}-pip-
+        node-version: '18'
+        cache: 'npm'
     
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-asyncio pytest-cov pytest-timeout pytest-mock flake8 black mypy
+      run: npm ci
     
     - name: Set up test environment
       run: |
-        python run_tests.py --setup-only --no-deps
+        npm run db:generate
+        npm run db:migrate
     
-    - name: Lint with flake8
-      run: |
-        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+    - name: Lint with ESLint
+      run: npm run lint
     
-    - name: Check code formatting with black
-      run: |
-        black --check .
-    
-    - name: Type check with mypy
-      run: |
-        mypy . --ignore-missing-imports
+    - name: Type check with TypeScript
+      run: npm run build
     
     - name: Run unit tests
-      run: |
-        python run_tests.py --type unit
+      run: npm run test:unit
     
     - name: Run integration tests
-      run: |
-        python run_tests.py --type integration
+      run: npm run test:integration
     
     - name: Run bot tests
-      run: |
-        python run_tests.py --type bot
+      run: npm run test:bot
     
     - name: Run API tests
-      run: |
-        python run_tests.py --type api
+      run: npm run test:api
     
     - name: Generate coverage report
-      run: |
-        python run_tests.py --coverage
+      run: npm run test:coverage
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v3
       with:
-        file: ./coverage.xml
+        file: ./coverage/lcov.info
         flags: unittests
         name: codecov-umbrella
         fail_ci_if_error: true
@@ -106,7 +86,7 @@ jobs:
     
     services:
       postgres:
-        image: postgres:13
+        image: postgres:15
         env:
           POSTGRES_PASSWORD: test
           POSTGRES_USER: test
@@ -120,55 +100,46 @@ jobs:
           - 5432:5432
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
       with:
-        python-version: 3.9
+        node-version: '18'
+        cache: 'npm'
     
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install pytest pytest-asyncio pytest-timeout pytest-mock
+      run: npm ci
     
     - name: Set up test environment
       run: |
-        python run_tests.py --setup-only --no-deps
+        npm run db:generate
+        npm run db:migrate
     
     - name: Run performance tests
-      run: |
-        python run_tests.py --performance
+      run: npm run test:performance
 
   security:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4
     
-    - name: Set up Python 3.9
-      uses: actions/setup-python@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
       with:
-        python-version: 3.9
+        node-version: '18'
+        cache: 'npm'
     
     - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install safety bandit
+      run: npm ci
     
-    - name: Run safety check
-      run: |
-        safety check
+    - name: Run security audit
+      run: npm audit --audit-level=moderate
     
-    - name: Run bandit security linter
-      run: |
-        bandit -r . -f json -o bandit-report.json || true
-    
-    - name: Upload bandit report
-      uses: actions/upload-artifact@v3
-      if: always()
+    - name: Run Snyk security scan
+      uses: snyk/actions/node@master
+      env:
+        SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
       with:
-        name: bandit-report
-        path: bandit-report.json
+        args: --severity-threshold=high
