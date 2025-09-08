@@ -20,12 +20,12 @@ router.get('/', async (req: Request, res: Response) => {
 
     const characters = await characterService.getCharactersByUserId(userId as string);
     
-    res.json({
+    return res.json({
       success: true,
       data: { characters },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch characters',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -36,6 +36,14 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
+    
     const character = await characterService.getCharacterById(id);
     
     if (!character) {
@@ -45,12 +53,12 @@ router.get('/:id', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { character },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch character',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -107,12 +115,12 @@ router.post('/', async (req: Request, res: Response) => {
       equipment
     );
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: { character },
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       error: 'Failed to create character',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -125,14 +133,21 @@ router.put('/:id', async (req: Request, res: Response) => {
     const { id } = req.params;
     const updateData = req.body;
 
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
+
     const character = await characterService.updateCharacter(id, updateData);
     
-    res.json({
+    return res.json({
       success: true,
       data: { character },
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       error: 'Failed to update character',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -143,14 +158,22 @@ router.put('/:id', async (req: Request, res: Response) => {
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
+    
     await characterService.deleteCharacter(id);
     
-    res.json({
+    return res.json({
       success: true,
       message: 'Character deleted successfully',
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       error: 'Failed to delete character',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -161,14 +184,22 @@ router.delete('/:id', async (req: Request, res: Response) => {
 router.get('/:id/inventory', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
+    
     const inventory = await characterService.getCharacterWithInventory(id);
     
-    res.json({
+    return res.json({
       success: true,
       data: { inventory: inventory?.inventory || [] },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch inventory',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -180,6 +211,13 @@ router.post('/:id/equip', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { inventoryItemId, slot } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
 
     if (!inventoryItemId || !slot) {
       return res.status(400).json({
@@ -197,7 +235,7 @@ router.post('/:id/equip', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { 
         character: result.character,
@@ -205,7 +243,7 @@ router.post('/:id/equip', async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       error: 'Failed to equip item',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -217,6 +255,13 @@ router.post('/:id/unequip', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
     const { slot } = req.body;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
 
     if (!slot) {
       return res.status(400).json({
@@ -234,7 +279,7 @@ router.post('/:id/unequip', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { 
         character: result.character,
@@ -242,7 +287,7 @@ router.post('/:id/unequip', async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       error: 'Failed to unequip item',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -253,14 +298,22 @@ router.post('/:id/unequip', async (req: Request, res: Response) => {
 router.get('/:id/equipment', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
+    
     const equipment = await equipmentService.getCharacterEquipment(id);
     
-    res.json({
+    return res.json({
       success: true,
       data: { equipment },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch equipment',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -271,6 +324,14 @@ router.get('/:id/equipment', async (req: Request, res: Response) => {
 router.get('/:id/stats', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
+    
     const character = await characterService.getCharacterById(id);
     
     if (!character) {
@@ -292,7 +353,7 @@ router.get('/:id/stats', async (req: Request, res: Response) => {
       critChance: baseStats.critChance + equippedStats.critChance,
     };
 
-    res.json({
+    return res.json({
       success: true,
       data: { 
         baseStats,
@@ -301,7 +362,7 @@ router.get('/:id/stats', async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch stats',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -312,14 +373,22 @@ router.get('/:id/stats', async (req: Request, res: Response) => {
 router.get('/:id/slots', async (req: Request, res: Response) => {
   try {
     const { id } = req.params;
+    
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
+    
     const availableSlots = await equipmentService.getAvailableSlots(id);
     
-    res.json({
+    return res.json({
       success: true,
       data: { availableSlots },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch available slots',
       message: error instanceof Error ? error.message : 'Unknown error',
