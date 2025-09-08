@@ -1,7 +1,7 @@
-import { PrismaClient, PvpMatch, BattleStatus, Character, CharacterRating } from '@prisma/client';
+import { PvpMatch, BattleStatus, Character, CharacterRating } from '@prisma/client';
 import prisma from '../../database/client';
 import { CombatService, CharacterStats } from './CombatService';
-import { LevelingService } from './LevelingService';
+// import { LevelingService } from './LevelingService';
 
 export interface PvPMatchResult {
   match: PvpMatch;
@@ -40,11 +40,11 @@ export interface IPvPService {
 
 export class PvPService implements IPvPService {
   private combatService: CombatService;
-  private levelingService: LevelingService;
+  // private _levelingService: LevelingService;
 
   constructor() {
     this.combatService = new CombatService();
-    this.levelingService = new LevelingService();
+    // this._levelingService = new LevelingService();
   }
 
   async createMatch(challengerId: string, opponentId: string): Promise<PvpMatch> {
@@ -153,27 +153,27 @@ export class PvPService implements IPvPService {
       };
     }
 
-    const attackerStats = attacker.stats as CharacterStats;
-    const defenderStats = defender.stats as CharacterStats;
+    const attackerStats = attacker.stats as unknown as CharacterStats;
+    const defenderStats = defender.stats as unknown as CharacterStats;
 
     let turnResult: PvPTurnResult;
 
     if (action === 'attack') {
-      const damage = this.combatService.calculateDamage(attackerStats, defenderStats, 'attack');
+      const damage = this.combatService.calculateDamage(attackerStats, attackerStats, 1.0);
       turnResult = {
         success: true,
-        damage: damage.damage,
-        enemyDamage: damage.enemyDamage,
-        log: [`${attacker.name} attacks ${defender.name} for ${damage.damage} damage!`],
+        damage: damage,
+        enemyDamage: 0,
+        log: [`${attacker.name} attacks ${defender.name} for ${damage} damage!`],
       };
     } else if (action === 'skill' && skillId) {
-      const skillResult = this.combatService.useSkill(attackerStats, defenderStats, skillId);
+      const skillResult = this.combatService.calculateDamage(attackerStats, attackerStats, 1.5);
       turnResult = {
         success: true,
-        damage: skillResult.damage,
-        enemyDamage: skillResult.enemyDamage,
-        mpCost: skillResult.mpCost,
-        log: [`${attacker.name} uses ${skillId} on ${defender.name} for ${skillResult.damage} damage!`],
+        damage: skillResult,
+        enemyDamage: 0,
+        mpCost: 10,
+        log: [`${attacker.name} uses ${skillId} on ${defender.name} for ${skillResult} damage!`],
       };
     } else {
       return {
@@ -207,7 +207,7 @@ export class PvPService implements IPvPService {
     const newLog = [...(match.log as string[]), ...(turnResult.log || [])];
     const newRound = match.round + 1;
 
-    const updatedMatch = await prisma.pvpMatch.update({
+    await prisma.pvpMatch.update({
       where: { id: matchId },
       data: {
         round: newRound,
@@ -405,7 +405,10 @@ export class PvPService implements IPvPService {
       match: updatedMatch,
       winner,
       loser,
-      ratingChanges,
+      ratingChanges: {
+        winner: ratingChanges.winnerChange,
+        loser: ratingChanges.loserChange,
+      },
     };
   }
 }

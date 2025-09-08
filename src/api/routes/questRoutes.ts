@@ -8,7 +8,6 @@ const router = Router();
 const questService = new QuestService();
 const characterService = new CharacterService();
 const userService = new UserService();
-const levelingService = new LevelingService();
 
 router.get('/', async (req: Request, res: Response) => {
   try {
@@ -45,12 +44,12 @@ router.get('/', async (req: Request, res: Response) => {
     }
 
     const quests = await questService.getQuestsByType('STORY');
-    res.json({
+    return res.json({
       success: true,
       data: { quests },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch quests',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -61,6 +60,14 @@ router.get('/', async (req: Request, res: Response) => {
 router.get('/:questId', async (req: Request, res: Response) => {
   try {
     const { questId } = req.params;
+    
+    if (!questId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Quest ID is required',
+      });
+    }
+    
     const quest = await questService.getQuestById(questId);
     
     if (!quest) {
@@ -70,12 +77,12 @@ router.get('/:questId', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { quest },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch quest',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -88,6 +95,13 @@ router.post('/:questId/accept', async (req: Request, res: Response) => {
     const { questId } = req.params;
     const { characterId } = req.body;
 
+    if (!questId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Quest ID is required',
+      });
+    }
+
     if (!characterId) {
       return res.status(400).json({
         success: false,
@@ -97,12 +111,12 @@ router.post('/:questId/accept', async (req: Request, res: Response) => {
 
     const characterQuest = await questService.acceptQuest(characterId, questId);
     
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       data: { characterQuest },
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       error: 'Failed to accept quest',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -115,6 +129,13 @@ router.post('/:questId/progress', async (req: Request, res: Response) => {
     const { questId } = req.params;
     const { characterId, progress } = req.body;
 
+    if (!questId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Quest ID is required',
+      });
+    }
+
     if (!characterId || !progress) {
       return res.status(400).json({
         success: false,
@@ -124,12 +145,12 @@ router.post('/:questId/progress', async (req: Request, res: Response) => {
 
     const characterQuest = await questService.updateQuestProgress(characterId, questId, progress);
     
-    res.json({
+    return res.json({
       success: true,
       data: { characterQuest },
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       error: 'Failed to update quest progress',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -141,6 +162,13 @@ router.post('/:questId/complete', async (req: Request, res: Response) => {
   try {
     const { questId } = req.params;
     const { characterId } = req.body;
+
+    if (!questId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Quest ID is required',
+      });
+    }
 
     if (!characterId) {
       return res.status(400).json({
@@ -183,7 +211,7 @@ router.post('/:questId/complete', async (req: Request, res: Response) => {
       await characterService.addXp(character.id, rewards.xp);
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { 
         characterQuest,
@@ -192,7 +220,7 @@ router.post('/:questId/complete', async (req: Request, res: Response) => {
       },
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       error: 'Failed to complete quest',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -203,14 +231,22 @@ router.post('/:questId/complete', async (req: Request, res: Response) => {
 router.get('/:questId/requirements/:characterId', async (req: Request, res: Response) => {
   try {
     const { questId, characterId } = req.params;
+    
+    if (!questId || !characterId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Quest ID and Character ID are required',
+      });
+    }
+    
     const requirements = await questService.checkQuestRequirements(characterId, questId);
     
-    res.json({
+    return res.json({
       success: true,
       data: requirements,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to check quest requirements',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -218,16 +254,16 @@ router.get('/:questId/requirements/:characterId', async (req: Request, res: Resp
   }
 });
 
-router.post('/seed', async (req: Request, res: Response) => {
+router.post('/seed', async (_req: Request, res: Response) => {
   try {
     await questService.seedDefaultQuests();
     
-    res.json({
+    return res.json({
       success: true,
       message: 'Default quests seeded successfully',
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to seed quests',
       message: error instanceof Error ? error.message : 'Unknown error',

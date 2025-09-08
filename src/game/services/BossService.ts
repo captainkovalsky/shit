@@ -1,6 +1,6 @@
-import { PrismaClient, Character, ItemRarity } from '@prisma/client';
+import { Character } from '@prisma/client';
 import prisma from '../../database/client';
-import { CombatService, CharacterStats, Enemy } from './CombatService';
+import { CharacterStats } from './CombatService';
 
 export interface BossSkill {
   name: string;
@@ -63,10 +63,10 @@ export interface IBossService {
 
 export class BossService implements IBossService {
   private bosses: Map<string, Boss> = new Map();
-  private combatService: CombatService;
+  // private _combatService: CombatService;
 
   constructor() {
-    this.combatService = new CombatService();
+    // this._combatService = new CombatService();
     this.initializeBosses();
   }
 
@@ -233,7 +233,7 @@ export class BossService implements IBossService {
       throw new Error('Character not found');
     }
 
-    const characterStats = character.stats as CharacterStats;
+    const characterStats = character.stats as unknown as CharacterStats;
     const characterHp = characterStats.hp;
     const characterMp = characterStats.mp;
 
@@ -251,7 +251,7 @@ export class BossService implements IBossService {
   }
 
   executeBossTurn(battleState: BossBattleState): BossBattleState {
-    const { boss, character, turn, characterHp, characterMp, bossHp, log, skillCooldowns } = battleState;
+    const { boss, character, turn, characterHp, bossHp, log, skillCooldowns } = battleState;
     
     const newState = { ...battleState };
     newState.turn = turn + 1;
@@ -273,7 +273,7 @@ export class BossService implements IBossService {
 
     if (availableSkills.length === 0) {
       const basicAttack = boss.attack * (boss.isEnraged ? 1.2 : 1.0);
-      const damage = Math.max(1, basicAttack - (character.stats as CharacterStats).defense);
+      const damage = Math.max(1, basicAttack - (character.stats as unknown as CharacterStats).defense);
       newState.characterHp = Math.max(0, characterHp - damage);
       newState.log.push(`${boss.name} attacks for ${damage} damage!`);
     } else {
@@ -288,29 +288,31 @@ export class BossService implements IBossService {
       newState.skillCooldowns[skill.name] = skill.cooldown;
     }
 
-    Object.keys(newState.skillCooldowns).forEach(skillName => {
-      if (newState.skillCooldowns[skillName] > 0) {
-        newState.skillCooldowns[skillName]--;
-      }
-    });
+    if (newState.skillCooldowns) {
+      Object.keys(newState.skillCooldowns).forEach(skillName => {
+        if (newState.skillCooldowns?.[skillName] && newState.skillCooldowns[skillName] > 0) {
+          newState.skillCooldowns[skillName]--;
+        }
+      });
+    }
 
     return newState;
   }
 
-  private selectBossSkill(availableSkills: BossSkill[], hpPercentage: number, turn: number): BossSkill {
+  private selectBossSkill(availableSkills: BossSkill[], hpPercentage: number, _turn: number): BossSkill {
     const enrageSkills = availableSkills.filter(skill => skill.name === 'Enrage');
     const otherSkills = availableSkills.filter(skill => skill.name !== 'Enrage');
 
     if (enrageSkills.length > 0 && hpPercentage <= 0.3) {
-      return enrageSkills[0];
+      return enrageSkills[0]!;
     }
 
     if (otherSkills.length === 0) {
-      return availableSkills[0];
+      return availableSkills[0]!;
     }
 
     const randomIndex = Math.floor(Math.random() * otherSkills.length);
-    return otherSkills[randomIndex];
+    return otherSkills[randomIndex]!;
   }
 
   private executeBossSkill(
@@ -319,7 +321,7 @@ export class BossService implements IBossService {
     character: Character,
     battleState: BossBattleState
   ): { characterHp: number; characterMp: number; log: string[] } {
-    const characterStats = character.stats as CharacterStats;
+    const characterStats = character.stats as unknown as CharacterStats;
     let characterHp = battleState.characterHp;
     let characterMp = battleState.characterMp;
     const log: string[] = [];

@@ -1,4 +1,4 @@
-import { PrismaClient, Character, InventoryItem, Item, ItemType } from '@prisma/client';
+import { Character, ItemType } from '@prisma/client';
 import prisma from '../client';
 import { CharacterService } from './CharacterService';
 import { ImageService } from '../../image/ImageService';
@@ -83,7 +83,7 @@ export class EquipmentService implements IEquipmentService {
       return {
         success: false,
         character,
-        error: canEquip.reason,
+        error: canEquip.reason || 'Cannot equip item',
       };
     }
 
@@ -105,7 +105,12 @@ export class EquipmentService implements IEquipmentService {
       data: { isEquipped: true },
     });
 
-    const renderJob = await this.imageService.generateCharacterSprite(characterId);
+    const renderJob = await this.imageService.generateCharacterSprite({
+      ...updatedCharacter,
+      stats: updatedCharacter.stats as any,
+      equipment: updatedCharacter.equipment as any,
+      spriteUrl: updatedCharacter.spriteUrl || '',
+    });
 
     return {
       success: true,
@@ -160,7 +165,12 @@ export class EquipmentService implements IEquipmentService {
       equipment: newEquipment as any,
     });
 
-    const renderJob = await this.imageService.generateCharacterSprite(characterId);
+    const renderJob = await this.imageService.generateCharacterSprite({
+      ...updatedCharacter,
+      stats: updatedCharacter.stats as any,
+      equipment: updatedCharacter.equipment as any,
+      spriteUrl: updatedCharacter.spriteUrl || '',
+    });
 
     return {
       success: true,
@@ -273,7 +283,7 @@ export class EquipmentService implements IEquipmentService {
       };
     }
 
-    const equipment = character.equipment as EquipmentSlot;
+    // const _equipment = character.equipment as EquipmentSlot;
     const inventory = await prisma.inventoryItem.findMany({
       where: {
         characterId,

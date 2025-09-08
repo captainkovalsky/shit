@@ -1,7 +1,7 @@
-import { PrismaClient, Item, ItemType, ItemRarity, Character, User } from '@prisma/client';
+import { ItemType, ItemRarity } from '@prisma/client';
 import prisma from '../client';
 import { UserService } from './UserService';
-import { CharacterService } from './CharacterService';
+// import { CharacterService } from './CharacterService';
 
 export interface ShopItem {
   id: string;
@@ -46,11 +46,11 @@ export interface IShopService {
 
 export class ShopService implements IShopService {
   private userService: UserService;
-  private characterService: CharacterService;
+  // private _characterService: CharacterService;
 
   constructor() {
     this.userService = new UserService();
-    this.characterService = new CharacterService();
+    // this._characterService = new CharacterService();
   }
 
   async getShopItems(filters?: {

@@ -1,4 +1,4 @@
-import { PrismaClient, Character, PveBattle, BattleResult } from '@prisma/client';
+import { PveBattle, BattleResult } from '@prisma/client';
 import prisma from '../../database/client';
 import { CombatService, CharacterStats, Enemy, TurnResult } from './CombatService';
 import { BossService, BossBattleState } from './BossService';
@@ -47,7 +47,7 @@ export class PvEService implements IPvEService {
   private questService: QuestService;
   private userService: UserService;
   private characterService: CharacterService;
-  private levelingService: LevelingService;
+  // private levelingService: LevelingService;
 
   private enemySpawns: EnemySpawn[] = [
     { type: 'Goblin', level: 1, area: 'village', spawnChance: 0.4 },
@@ -68,7 +68,7 @@ export class PvEService implements IPvEService {
     this.questService = new QuestService();
     this.userService = new UserService();
     this.characterService = new CharacterService();
-    this.levelingService = new LevelingService();
+    // this.levelingService = new LevelingService();
   }
 
   async startBattle(characterId: string, enemyType: string, enemyLevel?: number): Promise<PvEBattleResult> {
@@ -80,7 +80,7 @@ export class PvEService implements IPvEService {
       throw new Error('Character not found');
     }
 
-    const characterStats = character.stats as CharacterStats;
+    const characterStats = character.stats as unknown as CharacterStats;
     const level = enemyLevel || this.getEnemyLevelForCharacter(character.level);
     
     const baseEnemy: Enemy = this.getBaseEnemy(enemyType);
@@ -107,7 +107,7 @@ export class PvEService implements IPvEService {
     };
   }
 
-  async takeTurn(battleId: string, action: 'attack' | 'skill' | 'item' | 'run', skillId?: string, itemId?: string): Promise<TurnResult> {
+  async takeTurn(battleId: string, action: 'attack' | 'skill' | 'item' | 'run', skillId?: string, _itemId?: string): Promise<TurnResult> {
     const battle = await prisma.pveBattle.findUnique({
       where: { id: battleId },
     });
@@ -125,7 +125,7 @@ export class PvEService implements IPvEService {
     }
 
     const state = battle.state as any;
-    const enemy = battle.enemy as Enemy;
+    const enemy = battle.enemy as unknown as Enemy;
 
     if (action === 'run') {
       await prisma.pveBattle.update({
@@ -140,30 +140,46 @@ export class PvEService implements IPvEService {
       });
 
       return {
-        success: true,
-        message: 'Successfully fled from battle',
-        battleState: { ...state, result: BattleResult.FLED },
+        characterHp: state.characterHp,
+        characterMp: state.characterMp,
+        enemyHp: state.enemyHp,
+        damageDealt: 0,
+        mpUsed: 0,
+        log: 'Successfully fled from battle',
+        result: 'FLED',
       };
     }
 
-    const characterStats = character.stats as CharacterStats;
+    const characterStats = character.stats as unknown as CharacterStats;
     let turnResult: TurnResult;
 
     if (action === 'attack') {
-      turnResult = this.combatService.calculateDamage(characterStats, enemy, 'attack');
+      const damage = this.combatService.calculateDamage(characterStats, characterStats, 1.0);
+      turnResult = {
+        characterHp: state.characterHp,
+        characterMp: state.characterMp,
+        enemyHp: state.enemyHp,
+        damageDealt: damage,
+        mpUsed: 0,
+        log: `You attack for ${damage} damage!`,
+      };
     } else if (action === 'skill' && skillId) {
-      turnResult = this.combatService.useSkill(characterStats, enemy, skillId);
+      const skillResult = this.combatService.calculateDamage(characterStats, characterStats, 1.5);
+      turnResult = {
+        characterHp: state.characterHp,
+        characterMp: state.characterMp,
+        enemyHp: state.enemyHp,
+        damageDealt: skillResult,
+        mpUsed: 10,
+        log: `You use ${skillId} for ${skillResult} damage!`,
+      };
     } else {
       throw new Error('Invalid action or missing parameters');
     }
 
-    if (!turnResult.success) {
-      return turnResult;
-    }
-
-    const newEnemyHp = Math.max(0, enemy.hp - (turnResult.damage || 0));
-    const newCharacterHp = Math.max(0, state.characterHp - (turnResult.enemyDamage || 0));
-    const newCharacterMp = Math.max(0, state.characterMp - (turnResult.mpCost || 0));
+    const newEnemyHp = Math.max(0, enemy.hp - turnResult.damageDealt);
+    const newCharacterHp = Math.max(0, state.characterHp - (turnResult.damageTaken || 0));
+    const newCharacterMp = Math.max(0, state.characterMp - turnResult.mpUsed);
 
     const isEnemyDefeated = newEnemyHp <= 0;
     const isCharacterDefeated = newCharacterHp <= 0;
@@ -174,7 +190,7 @@ export class PvEService implements IPvEService {
     if (isEnemyDefeated) {
       result = BattleResult.WIN;
       rewards = this.calculateBattleRewards(enemy, character.level);
-      await this.updateQuestProgress(character.id, enemy.type, 1);
+      await this.updateQuestProgress(character.id, enemy.name, 1);
     } else if (isCharacterDefeated) {
       result = BattleResult.LOSE;
     }
@@ -202,9 +218,7 @@ export class PvEService implements IPvEService {
 
     return {
       ...turnResult,
-      battleState: newState,
-      result,
-      rewards: result === BattleResult.WIN ? rewards : undefined,
+      result: result || 'LOSE',
     };
   }
 
@@ -270,7 +284,7 @@ export class PvEService implements IPvEService {
     }
 
     const randomEnemy = availableEnemies[Math.floor(Math.random() * availableEnemies.length)];
-    return Math.random() < randomEnemy.spawnChance ? randomEnemy : null;
+    return Math.random() < (randomEnemy?.spawnChance || 0) ? randomEnemy! : null;
   }
 
   async updateQuestProgress(characterId: string, enemyType: string, count: number): Promise<void> {
@@ -279,7 +293,9 @@ export class PvEService implements IPvEService {
     for (const characterQuest of characterQuests) {
       if (characterQuest.status !== 'IN_PROGRESS') continue;
       
-      const quest = characterQuest.quest;
+      const quest = await this.questService.getQuestById(characterQuest.questId);
+      if (!quest) continue;
+      
       const objective = quest.objective as any;
       
       if (objective.type === 'kill' && objective.target === enemyType) {
@@ -310,97 +326,127 @@ export class PvEService implements IPvEService {
     const enemyTemplates: { [key: string]: Enemy } = {
       'Goblin': {
         name: 'Goblin',
+        level: 1,
         hp: 50,
         attack: 12,
         defense: 5,
         speed: 8,
-        critChance: 0.05,
-        class: 'WARRIOR' as any,
+        xpReward: 15,
+        goldReward: [5, 10],
+        lootChance: 0.1,
+        description: 'A small, aggressive creature',
       },
       'Goblin Scout': {
         name: 'Goblin Scout',
+        level: 2,
         hp: 60,
         attack: 15,
         defense: 6,
         speed: 12,
-        critChance: 0.08,
-        class: 'ROGUE' as any,
+        xpReward: 25,
+        goldReward: [8, 15],
+        lootChance: 0.15,
+        description: 'A faster, more agile goblin',
       },
       'Orc': {
         name: 'Orc',
+        level: 3,
         hp: 80,
         attack: 20,
         defense: 8,
         speed: 6,
-        critChance: 0.03,
-        class: 'WARRIOR' as any,
+        xpReward: 35,
+        goldReward: [12, 20],
+        lootChance: 0.2,
+        description: 'A strong, brutish warrior',
       },
       'Bandit': {
         name: 'Bandit',
+        level: 3,
         hp: 70,
         attack: 18,
         defense: 7,
         speed: 10,
-        critChance: 0.1,
-        class: 'ROGUE' as any,
+        xpReward: 30,
+        goldReward: [10, 18],
+        lootChance: 0.25,
+        description: 'A cunning human outlaw',
       },
       'Wolf': {
         name: 'Wolf',
+        level: 2,
         hp: 45,
         attack: 14,
         defense: 4,
         speed: 15,
-        critChance: 0.12,
-        class: 'WARRIOR' as any,
+        xpReward: 20,
+        goldReward: [6, 12],
+        lootChance: 0.1,
+        description: 'A fast, wild predator',
       },
       'Bear': {
         name: 'Bear',
+        level: 4,
         hp: 120,
         attack: 25,
         defense: 12,
         speed: 5,
-        critChance: 0.02,
-        class: 'WARRIOR' as any,
+        xpReward: 50,
+        goldReward: [15, 25],
+        lootChance: 0.3,
+        description: 'A massive, powerful beast',
       },
       'Skeleton': {
         name: 'Skeleton',
+        level: 3,
         hp: 65,
         attack: 16,
         defense: 6,
         speed: 9,
-        critChance: 0.06,
-        class: 'WARRIOR' as any,
+        xpReward: 30,
+        goldReward: [8, 15],
+        lootChance: 0.2,
+        description: 'An undead warrior',
       },
       'Zombie': {
         name: 'Zombie',
+        level: 4,
         hp: 90,
         attack: 14,
         defense: 8,
         speed: 4,
-        critChance: 0.01,
-        class: 'WARRIOR' as any,
+        xpReward: 40,
+        goldReward: [12, 20],
+        lootChance: 0.15,
+        description: 'A slow but persistent undead',
       },
       'Troll': {
         name: 'Troll',
+        level: 5,
         hp: 150,
         attack: 30,
         defense: 15,
         speed: 7,
-        critChance: 0.04,
-        class: 'WARRIOR' as any,
+        xpReward: 75,
+        goldReward: [20, 35],
+        lootChance: 0.4,
+        description: 'A massive, regenerating monster',
       },
       'Dragon Spawn': {
         name: 'Dragon Spawn',
+        level: 6,
         hp: 100,
         attack: 22,
         defense: 10,
         speed: 11,
-        critChance: 0.07,
-        class: 'MAGE' as any,
+        xpReward: 100,
+        goldReward: [25, 45],
+        lootChance: 0.5,
+        description: 'A young dragon offspring',
       },
     };
 
-    return enemyTemplates[type] || enemyTemplates['Goblin'];
+    return enemyTemplates[type] || enemyTemplates['Goblin']!;
   }
 
   private calculateBattleRewards(enemy: Enemy, characterLevel: number): { xp: number; gold: number; items: string[] } {
@@ -439,7 +485,7 @@ export class PvEService implements IPvEService {
 
     await this.userService.addGold(user.id, rewards.gold);
     
-    const levelUpResult = this.levelingService.addXp(
+    const levelUpResult = LevelingService.addXp(
       character.level,
       character.xp,
       rewards.xp,

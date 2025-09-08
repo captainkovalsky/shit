@@ -33,6 +33,14 @@ router.get('/items', async (req: Request, res: Response) => {
 router.get('/items/:itemId', async (req: Request, res: Response) => {
   try {
     const { itemId } = req.params;
+    
+    if (!itemId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Item ID is required',
+      });
+    }
+    
     const item = await shopService.getItemById(itemId);
     
     if (!item) {
@@ -42,12 +50,12 @@ router.get('/items/:itemId', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: { item },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch item',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -75,12 +83,12 @@ router.post('/buy/gold', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: result,
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       error: 'Failed to purchase item',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -108,12 +116,12 @@ router.post('/buy/gems', async (req: Request, res: Response) => {
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: result,
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       error: 'Failed to purchase item',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -124,14 +132,22 @@ router.post('/buy/gems', async (req: Request, res: Response) => {
 router.get('/inventory/:characterId', async (req: Request, res: Response) => {
   try {
     const { characterId } = req.params;
+    
+    if (!characterId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
+    
     const inventory = await shopService.getCharacterInventory(characterId);
     
-    res.json({
+    return res.json({
       success: true,
       data: { inventory },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch inventory',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -142,14 +158,22 @@ router.get('/inventory/:characterId', async (req: Request, res: Response) => {
 router.get('/inventory/:characterId/slots', async (req: Request, res: Response) => {
   try {
     const { characterId } = req.params;
+    
+    if (!characterId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
+    
     const slots = await shopService.getInventorySlots(characterId);
     
-    res.json({
+    return res.json({
       success: true,
       data: slots,
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to fetch inventory slots',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -161,6 +185,13 @@ router.post('/inventory/:characterId/expand', async (req: Request, res: Response
   try {
     const { characterId } = req.params;
     const { slots = 5 } = req.body;
+
+    if (!characterId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID is required',
+      });
+    }
 
     if (slots <= 0 || slots > 20) {
       return res.status(400).json({
@@ -179,12 +210,12 @@ router.post('/inventory/:characterId/expand', async (req: Request, res: Response
       });
     }
 
-    res.json({
+    return res.json({
       success: true,
       data: result,
     });
   } catch (error) {
-    res.status(400).json({
+    return res.status(400).json({
       success: false,
       error: 'Failed to expand inventory',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -197,6 +228,13 @@ router.get('/afford/:characterId/:itemId', async (req: Request, res: Response) =
     const { characterId, itemId } = req.params;
     const { currency = 'gold' } = req.query;
 
+    if (!characterId || !itemId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Character ID and Item ID are required',
+      });
+    }
+
     if (currency !== 'gold' && currency !== 'gems') {
       return res.status(400).json({
         success: false,
@@ -206,12 +244,12 @@ router.get('/afford/:characterId/:itemId', async (req: Request, res: Response) =
 
     const canAfford = await shopService.canAfford(characterId, itemId, currency as 'gold' | 'gems');
     
-    res.json({
+    return res.json({
       success: true,
       data: { canAfford, currency },
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to check affordability',
       message: error instanceof Error ? error.message : 'Unknown error',
@@ -219,16 +257,16 @@ router.get('/afford/:characterId/:itemId', async (req: Request, res: Response) =
   }
 });
 
-router.post('/seed', async (req: Request, res: Response) => {
+router.post('/seed', async (_req: Request, res: Response) => {
   try {
     await shopService.seedDefaultItems();
     
-    res.json({
+    return res.json({
       success: true,
       message: 'Default items seeded successfully',
     });
   } catch (error) {
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       error: 'Failed to seed items',
       message: error instanceof Error ? error.message : 'Unknown error',
