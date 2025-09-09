@@ -9,8 +9,7 @@ export interface AppError extends Error {
 export const errorHandler = (
   error: AppError,
   _req: Request,
-  res: Response,
-  _next: NextFunction
+  res: Response
 ): void => {
   let statusCode = error.statusCode || 500;
   let message = error.message || 'Internal server error';
@@ -56,7 +55,7 @@ export const createError = (message: string, statusCode: number = 500): AppError
   return error;
 };
 
-export const asyncHandler = (fn: Function) => {
+export const asyncHandler = (fn: Function): ((req: Request, res: Response, next: NextFunction) => void) => {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
   };
