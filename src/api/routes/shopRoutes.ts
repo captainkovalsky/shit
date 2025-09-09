@@ -9,7 +9,12 @@ router.get('/items', async (req: Request, res: Response) => {
   try {
     const { type, rarity, minLevel, maxLevel } = req.query;
     
-    const filters: any = {};
+    const filters: {
+      type?: ItemType;
+      rarity?: ItemRarity;
+      minLevel?: number;
+      maxLevel?: number;
+    } = {};
     if (type) filters.type = type as ItemType;
     if (rarity) filters.rarity = rarity as ItemRarity;
     if (minLevel) filters.minLevel = parseInt(minLevel as string);
