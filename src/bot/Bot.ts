@@ -258,7 +258,7 @@ export class Bot {
       const inventoryItemId = ctx.match?.[2];
       const slot = ctx.match?.[3];
       if (characterId && inventoryItemId && slot) {
-        await this.callbackHandler.handleEquip(ctx, characterId, inventoryItemId, slot as any);
+        await this.callbackHandler.handleEquip(ctx, characterId, inventoryItemId, slot as 'weapon' | 'helmet' | 'armor' | 'boots' | 'accessory');
       }
     });
 
@@ -266,7 +266,7 @@ export class Bot {
       const characterId = ctx.match?.[1];
       const slot = ctx.match?.[2];
       if (characterId && slot) {
-        await this.callbackHandler.handleUnequip(ctx, characterId, slot as any);
+        await this.callbackHandler.handleUnequip(ctx, characterId, slot as 'weapon' | 'helmet' | 'armor' | 'boots' | 'accessory');
       }
     });
 
@@ -319,7 +319,7 @@ export class Bot {
 
     // Text input for character name
     this.bot.on('text', async (ctx) => {
-      if ((ctx.session as any).characterClass && !ctx.message.text.startsWith('/')) {
+      if (ctx.session.characterClass && !ctx.message.text.startsWith('/')) {
         await this.callbackHandler.handleNameInput(ctx, ctx.message.text.trim());
       }
     });
