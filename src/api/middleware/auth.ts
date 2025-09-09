@@ -48,7 +48,7 @@ export const authMiddleware = async (
         };
         next();
         return;
-      } catch (jwtError) {
+      } catch {
         res.status(401).json({
           success: false,
           error: 'Unauthorized',
@@ -95,7 +95,7 @@ export const optionalAuthMiddleware = async (
           telegramId: decoded.telegramId,
           userId: decoded.userId,
         };
-      } catch (jwtError) {
+      } catch {
         req.user = undefined;
       }
     }
