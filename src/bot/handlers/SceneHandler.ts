@@ -27,7 +27,7 @@ export class SceneHandler {
     characterCreationScene.action(/^class_(.+)$/, async (ctx) => {
       const characterClass = ctx.match?.[1]?.toUpperCase() as CharacterClass;
       if (characterClass) {
-        (ctx.session as any).characterClass = characterClass;
+        ctx.session.characterClass = characterClass;
       }
       
       await ctx.editMessageText(
