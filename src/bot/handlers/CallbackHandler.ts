@@ -554,7 +554,7 @@ export class CallbackHandler {
         character.xp,
         rewards.xp,
         character.class,
-        character.stats as any
+        character.stats as CharacterStats
       );
 
       if (levelUpResult.levelsGained > 0) {
@@ -729,7 +729,7 @@ export class CallbackHandler {
 
       if (item.stats) {
         message += `**Stats:**\n`;
-        Object.entries(item.stats as any).forEach(([stat, value]) => {
+        Object.entries(item.stats as Record<string, number>).forEach(([stat, value]) => {
           message += `• ${stat}: ${value}\n`;
         });
         message += '\n';
@@ -1024,7 +1024,7 @@ export class CallbackHandler {
 
   async handleEquip(ctx: BotContext, characterId: string, inventoryItemId: string, slot: string): Promise<void> {
     try {
-      const result = await this.equipmentService.equipItem(characterId, inventoryItemId, slot as any);
+      const result = await this.equipmentService.equipItem(characterId, inventoryItemId, slot as 'weapon' | 'helmet' | 'armor' | 'boots' | 'accessory');
       
       if (!result.success) {
         await ctx.answerCbQuery(`Failed to equip item: ${result.error}`);
@@ -1050,7 +1050,7 @@ export class CallbackHandler {
 
   async handleUnequip(ctx: BotContext, characterId: string, slot: string): Promise<void> {
     try {
-      const result = await this.equipmentService.unequipItem(characterId, slot as any);
+      const result = await this.equipmentService.unequipItem(characterId, slot as 'weapon' | 'helmet' | 'armor' | 'boots' | 'accessory');
       
       if (!result.success) {
         await ctx.answerCbQuery(`Failed to unequip item: ${result.error}`);
