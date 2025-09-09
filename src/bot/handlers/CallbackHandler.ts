@@ -1,7 +1,7 @@
 // CharacterClass will be imported from the correct location
 import { config } from '@/config/index';
 import { IUserService } from '@/database/services/UserService';
-import { ICharacterService } from '@/database/services/CharacterService';
+import { ICharacterService, CharacterStats } from '@/database/services/CharacterService';
 import { IQuestService } from '@/database/services/QuestService';
 import { IShopService } from '@/database/services/ShopService';
 import { IEquipmentService } from '@/database/services/EquipmentService';
@@ -28,9 +28,9 @@ export class CallbackHandler {
   ) {}
 
   async handleClassSelection(ctx: BotContext, characterClass: string): Promise<void> {
-    const classEnum = characterClass.toUpperCase() as any;
+    const classEnum = characterClass.toUpperCase() as 'WARRIOR' | 'MAGE' | 'ROGUE';
     if (classEnum) {
-      (ctx.session as any).characterClass = classEnum;
+      ctx.session.characterClass = classEnum;
     }
     
     await ctx.editMessageText(
@@ -58,11 +58,11 @@ export class CallbackHandler {
     }
 
     const cardUrl = await this.imageService.generateCharacterCard(
-      character as any,
+      character,
       character.spriteUrl || ''
     );
 
-    const stats = character.stats as any;
+    const stats = character.stats as CharacterStats;
     await ctx.replyWithPhoto(
       { url: cardUrl },
       {
