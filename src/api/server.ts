@@ -104,7 +104,7 @@ export class ApiServer {
   public async close(): Promise<void> {
     if (this.server) {
       return new Promise((resolve) => {
-        this.server.close(() => {
+        this.server!.close(() => {
           resolve();
         });
       });
