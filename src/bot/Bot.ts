@@ -55,6 +55,7 @@ export class Bot {
       this.equipmentService,
       this.paymentService,
       this.pvpService,
+      this.pveService,
       this.bossService,
       this.imageService
     );

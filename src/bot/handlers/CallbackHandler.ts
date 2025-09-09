@@ -7,6 +7,7 @@ import { IShopService } from '@/database/services/ShopService';
 import { IEquipmentService } from '@/database/services/EquipmentService';
 import { IPaymentService } from '@/database/services/PaymentService';
 import { IPvPService } from '@/game/services/PvPService';
+import { IPvEService } from '@/game/services/PvEService';
 import { IBossService } from '@/game/services/BossService';
 import { LevelingService } from '@/game/services/LevelingService';
 import { ImageService } from '@/image/ImageService';
@@ -21,6 +22,7 @@ export class CallbackHandler {
     private equipmentService: IEquipmentService,
     private paymentService: IPaymentService,
     private pvpService: IPvPService,
+    private pveService: IPvEService,
     private bossService: IBossService,
     private imageService: ImageService
   ) {}
@@ -91,41 +93,154 @@ export class CallbackHandler {
       return;
     }
 
-    await ctx.scene.enter('combat');
-    (ctx.session as any).battleId = 'battle_' + Date.now();
-    (ctx.session as any).characterId = characterId;
+    const availableEnemies = this.pveService.getAvailableEnemies(character.level);
+    
+    if (availableEnemies.length === 0) {
+      await ctx.answerCbQuery('No enemies available at your level!');
+      return;
+    }
 
-    await ctx.editMessageText(
-      `⚔️ Battle Started!\n\n` +
-      `Enemy: Goblin (Level ${character.level})\n` +
-      `Enemy HP: ${50 + character.level * 10}\n\n` +
-      `Your HP: ${(character.stats as any).hp}\n` +
-      `Your MP: ${(character.stats as any).mp}\n\n` +
-      `Choose your action:`,
-      {
-        reply_markup: {
-          inline_keyboard: [
-            [
-              { text: '⚔️ Attack', callback_data: 'action_attack' },
-              { text: '🔮 Skills', callback_data: 'action_skills' }
-            ],
-            [
-              { text: '🏃 Run', callback_data: 'action_run' }
+    const enemySpawn = this.pveService.spawnEnemy('forest', character.level);
+    if (!enemySpawn) {
+      await ctx.answerCbQuery('Failed to spawn enemy!');
+      return;
+    }
+
+    try {
+      const battleResult = await this.pveService.startBattle(characterId, enemySpawn.type, enemySpawn.level);
+      
+      await ctx.scene.enter('combat');
+      (ctx.session as any).battleId = battleResult.battle.id;
+      (ctx.session as any).characterId = characterId;
+
+      const battle = battleResult.battle;
+      const state = battle.state as any;
+      const enemyHp = state?.enemyHp || 100;
+      const characterHp = state?.characterHp || (character.stats as any).hp;
+      const characterMp = state?.characterMp || (character.stats as any).mp;
+
+      await ctx.editMessageText(
+        `⚔️ Battle Started!\n\n` +
+        `Enemy: ${enemySpawn.type} (Level ${enemySpawn.level})\n` +
+        `Enemy HP: ${enemyHp}\n\n` +
+        `Your HP: ${characterHp}\n` +
+        `Your MP: ${characterMp}\n\n` +
+        `Choose your action:`,
+        {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '⚔️ Attack', callback_data: 'action_attack' },
+                { text: '🔮 Skills', callback_data: 'action_skills' }
+              ],
+              [
+                { text: '🏃 Run', callback_data: 'action_run' }
+              ]
             ]
-          ]
+          }
         }
-      }
-    );
+      );
+    } catch (error) {
+      console.error('Error starting battle:', error);
+      await ctx.answerCbQuery('Failed to start battle. Please try again.');
+    }
   }
 
   async handleBattleAction(ctx: BotContext, action: string): Promise<void> {
+    const battleId = (ctx.session as any).battleId;
+    const characterId = (ctx.session as any).characterId;
+
+    if (!battleId || !characterId) {
+      await ctx.answerCbQuery('No active battle found!');
+      return;
+    }
+
     if (action === 'run') {
       await ctx.editMessageText('🏃 You fled from battle!');
       await ctx.scene.leave();
       return;
     }
 
-    await ctx.editMessageText('Battle action executed!');
+    try {
+      const turnResult = await this.pveService.takeTurn(battleId, action as any);
+      
+      const battle = await this.pveService.getBattle(battleId);
+      if (!battle) {
+        await ctx.answerCbQuery('Battle not found!');
+        return;
+      }
+
+      const enemy = battle.enemy as any;
+
+      let message = `⚔️ Battle Update\n\n`;
+      message += `Enemy HP: ${turnResult.enemyHp}\n`;
+      message += `Your HP: ${turnResult.characterHp}\n`;
+      message += `Your MP: ${turnResult.characterMp}\n\n`;
+      
+      if (turnResult.damageDealt > 0) {
+        message += `You dealt ${turnResult.damageDealt} damage!\n`;
+      }
+      if (turnResult.damageTaken && turnResult.damageTaken > 0) {
+        message += `You took ${turnResult.damageTaken} damage!\n`;
+      }
+      if (turnResult.mpUsed > 0) {
+        message += `Used ${turnResult.mpUsed} MP!\n`;
+      }
+      message += '\n';
+
+      if (turnResult.enemyHp <= 0) {
+        message += `🎉 Victory! Enemy defeated!\n`;
+        message += `Battle completed successfully!\n`;
+
+        // Update quest progress for enemy kills
+        try {
+          if (enemy && enemy.name) {
+            await this.pveService.updateQuestProgress(characterId, enemy.name, 1);
+          }
+        } catch (error) {
+          console.error('Error updating quest progress:', error);
+        }
+
+        await ctx.editMessageText(message, {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 Back to Menu', callback_data: `select_char_${characterId}` }]
+            ]
+          }
+        });
+        await ctx.scene.leave();
+      } else if (turnResult.characterHp <= 0) {
+        message += `💀 Defeat! You were defeated!\n`;
+        
+        await ctx.editMessageText(message, {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 Back to Menu', callback_data: `select_char_${characterId}` }]
+            ]
+          }
+        });
+        await ctx.scene.leave();
+      } else {
+        message += `Choose your next action:`;
+        
+        await ctx.editMessageText(message, {
+          reply_markup: {
+            inline_keyboard: [
+              [
+                { text: '⚔️ Attack', callback_data: 'action_attack' },
+                { text: '🔮 Skills', callback_data: 'action_skills' }
+              ],
+              [
+                { text: '🏃 Run', callback_data: 'action_run' }
+              ]
+            ]
+          }
+        });
+      }
+    } catch (error) {
+      console.error('Error executing battle action:', error);
+      await ctx.answerCbQuery('Failed to execute action. Please try again.');
+    }
   }
 
   async handleNameInput(ctx: BotContext, name: string): Promise<void> {
@@ -1146,6 +1261,9 @@ export class CallbackHandler {
 
       const battle = await this.bossService.createBossBattle(characterId, bossId);
       
+      // Store battle state in session
+      (ctx.session as any).bossBattleState = battle;
+      
       let message = `👹 Boss Battle Started!\n\n`;
       message += `Boss: ${boss.name}\n`;
       message += `Level: ${boss.level}\n`;
@@ -1180,64 +1298,107 @@ export class CallbackHandler {
         return;
       }
 
-      // For now, we'll create a simple battle result
-      // In a real implementation, this would handle the turn logic
-      const result = {
-        success: true,
-        bossHp: 100,
-        characterHp: 80,
-        characterMp: 50,
-        log: [`Character used ${action}!`],
-        result: null as any,
-        rewards: null as any
-      };
-      
-      if (!result.success) {
-        await ctx.answerCbQuery(`Action failed!`);
+      const battleState = (ctx.session as any).bossBattleState;
+      if (!battleState) {
+        await ctx.answerCbQuery('No active boss battle found!');
         return;
       }
 
-      let message = `👹 Boss Battle\n\n`;
-      message += `Boss HP: ${result.bossHp}\n`;
-      message += `Your HP: ${result.characterHp}\n`;
-      message += `Your MP: ${result.characterMp}\n\n`;
+      // Execute the character's turn
+      const updatedBattleState = { ...battleState };
       
-      if (result.log) {
-        message += `Battle Log:\n`;
-        result.log.forEach((logEntry: string) => {
-          message += `• ${logEntry}\n`;
+      // Simple turn logic for now - in a real implementation this would use the combat service
+      if (action === 'attack') {
+        const damage = Math.max(1, updatedBattleState.character.attack - updatedBattleState.boss.defense);
+        updatedBattleState.bossHp = Math.max(0, updatedBattleState.bossHp - damage);
+        updatedBattleState.log.push(`${updatedBattleState.character.name} attacks for ${damage} damage!`);
+      } else if (action === 'skill') {
+        const damage = Math.max(1, (updatedBattleState.character.attack * 1.5) - updatedBattleState.boss.defense);
+        updatedBattleState.bossHp = Math.max(0, updatedBattleState.bossHp - damage);
+        updatedBattleState.characterMp = Math.max(0, updatedBattleState.characterMp - 10);
+        updatedBattleState.log.push(`${updatedBattleState.character.name} uses a skill for ${damage} damage!`);
+      }
+
+      // Check if boss is defeated
+      if (updatedBattleState.bossHp <= 0) {
+        const rewards = this.bossService.calculateBossRewards(updatedBattleState.boss, updatedBattleState.character.level);
+        
+        // Update quest progress for boss kills
+        try {
+          await this.pveService.updateQuestProgress(characterId, updatedBattleState.boss.name, 1);
+        } catch (error) {
+          console.error('Error updating quest progress for boss kill:', error);
+        }
+        
+        let message = `🎉 Victory! You defeated ${updatedBattleState.boss.name}!\n\n`;
+        message += `Rewards:\n`;
+        message += `• XP: ${rewards.xp}\n`;
+        message += `• Gold: ${rewards.gold}\n`;
+        if (rewards.items.length > 0) {
+          message += `• Items: ${rewards.items.join(', ')}\n`;
+        }
+
+        await ctx.editMessageText(message, {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 Back to Bosses', callback_data: `boss_${characterId}` }]
+            ]
+          }
         });
-        message += '\n';
+        
+        (ctx.session as any).bossBattleState = null;
+        return;
       }
 
-      if (result.result === 'WIN') {
-        message += `🎉 Victory! You defeated the boss!\n`;
-        message += `Rewards: ${result.rewards?.xp} XP, ${result.rewards?.gold} Gold`;
-      } else if (result.result === 'LOSE') {
-        message += `💀 Defeat! The boss was too strong!`;
-      } else {
-        message += `Choose your next action:`;
+      // Boss turn
+      const bossDamage = Math.max(1, updatedBattleState.boss.attack - updatedBattleState.character.defense);
+      updatedBattleState.characterHp = Math.max(0, updatedBattleState.characterHp - bossDamage);
+      updatedBattleState.log.push(`${updatedBattleState.boss.name} attacks for ${bossDamage} damage!`);
+
+      // Check if character is defeated
+      if (updatedBattleState.characterHp <= 0) {
+        let message = `💀 Defeat! ${updatedBattleState.boss.name} was too strong!\n\n`;
+        message += `You were defeated in battle.`;
+
+        await ctx.editMessageText(message, {
+          reply_markup: {
+            inline_keyboard: [
+              [{ text: '🔙 Back to Bosses', callback_data: `boss_${characterId}` }]
+            ]
+          }
+        });
+        
+        (ctx.session as any).bossBattleState = null;
+        return;
       }
 
-      const keyboard = [];
+      // Update session with new battle state
+      (ctx.session as any).bossBattleState = updatedBattleState;
+
+      let message = `👹 Boss Battle\n\n`;
+      message += `Boss: ${updatedBattleState.boss.name}\n`;
+      message += `Boss HP: ${updatedBattleState.bossHp}/${updatedBattleState.boss.maxHp}\n\n`;
+      message += `Your HP: ${updatedBattleState.characterHp}\n`;
+      message += `Your MP: ${updatedBattleState.characterMp}\n\n`;
       
-      if (!result.result) {
-        keyboard.push(
-          [
-            { text: '⚔️ Attack', callback_data: `boss_action_${characterId}_attack` },
-            { text: '🔮 Skill', callback_data: `boss_action_${characterId}_skill` }
-          ],
-          [
-            { text: '🏃 Run', callback_data: `boss_action_${characterId}_run` }
-          ]
-        );
-      } else {
-        keyboard.push([{ text: '🔙 Back to Bosses', callback_data: `boss_${characterId}` }]);
-      }
+      message += `Battle Log:\n`;
+      updatedBattleState.log.slice(-3).forEach((logEntry: string) => {
+        message += `• ${logEntry}\n`;
+      });
+      message += '\n';
+      message += `Choose your next action:`;
 
       await ctx.editMessageText(message, {
         reply_markup: {
-          inline_keyboard: keyboard
+          inline_keyboard: [
+            [
+              { text: '⚔️ Attack', callback_data: `boss_action_${characterId}_attack` },
+              { text: '🔮 Skill', callback_data: `boss_action_${characterId}_skill` }
+            ],
+            [
+              { text: '🏃 Run', callback_data: `boss_action_${characterId}_run` }
+            ]
+          ]
         }
       });
     } catch (error) {
