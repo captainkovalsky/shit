@@ -271,21 +271,21 @@ export class CallbackHandler {
       return;
     }
 
-    const stats = LevelingService.createBaseStats((ctx.session as any).characterClass);
+    const stats = LevelingService.createBaseStats(ctx.session.characterClass!);
     const equipment = {};
     
     const character = await this.characterService.createCharacter(
       user.id,
       name,
-      (ctx.session as any).characterClass,
+      ctx.session.characterClass!,
       stats,
       equipment
     );
 
-    const spriteUrl = await this.imageService.generateCharacterSprite(character as any);
+    const spriteUrl = await this.imageService.generateCharacterSprite(character);
     await this.characterService.updateSpriteUrl(character.id, spriteUrl);
 
-    const cardUrl = await this.imageService.generateCharacterCard(character as any, spriteUrl);
+    const cardUrl = await this.imageService.generateCharacterCard(character, spriteUrl);
 
     await ctx.replyWithPhoto(
       { url: cardUrl },
@@ -338,8 +338,8 @@ export class CallbackHandler {
     if (inProgressQuests.length > 0) {
       message += `🔄 In Progress (${inProgressQuests.length}):\n`;
       inProgressQuests.forEach(quest => {
-        const objective = quest.objective as any;
-        const progress = quest.progress as any;
+        const objective = quest.objective as { target: string; count: number };
+        const progress = quest.progress as { [key: string]: { count: number } };
         const progressKey = `kill_${objective.target}`;
         const currentCount = progress[progressKey]?.count || 0;
         message += `• ${quest.title} - ${currentCount}/${objective.count} ${objective.target}s\n`;
