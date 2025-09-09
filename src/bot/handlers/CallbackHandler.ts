@@ -110,14 +110,14 @@ export class CallbackHandler {
       const battleResult = await this.pveService.startBattle(characterId, enemySpawn.type, enemySpawn.level);
       
       await ctx.scene.enter('combat');
-      (ctx.session as any).battleId = battleResult.battle.id;
-      (ctx.session as any).characterId = characterId;
+      ctx.session.battleId = battleResult.battle.id;
+      ctx.session.characterId = characterId;
 
       const battle = battleResult.battle;
-      const state = battle.state as any;
+      const state = battle.state as { enemyHp?: number; characterHp?: number; characterMp?: number };
       const enemyHp = state?.enemyHp || 100;
-      const characterHp = state?.characterHp || (character.stats as any).hp;
-      const characterMp = state?.characterMp || (character.stats as any).mp;
+      const characterHp = state?.characterHp || (character.stats as CharacterStats).hp;
+      const characterMp = state?.characterMp || (character.stats as CharacterStats).mp;
 
       await ctx.editMessageText(
         `⚔️ Battle Started!\n\n` +
@@ -147,8 +147,8 @@ export class CallbackHandler {
   }
 
   async handleBattleAction(ctx: BotContext, action: string): Promise<void> {
-    const battleId = (ctx.session as any).battleId;
-    const characterId = (ctx.session as any).characterId;
+    const battleId = ctx.session.battleId;
+    const characterId = ctx.session.characterId;
 
     if (!battleId || !characterId) {
       await ctx.answerCbQuery('No active battle found!');
@@ -162,7 +162,7 @@ export class CallbackHandler {
     }
 
     try {
-      const turnResult = await this.pveService.takeTurn(battleId, action as any);
+      const turnResult = await this.pveService.takeTurn(battleId, action as 'attack' | 'skill' | 'item' | 'run');
       
       const battle = await this.pveService.getBattle(battleId);
       if (!battle) {
@@ -170,7 +170,7 @@ export class CallbackHandler {
         return;
       }
 
-      const enemy = battle.enemy as any;
+      const enemy = battle.enemy as { type: string; level: number; hp: number; attack: number; defense: number };
 
       let message = `⚔️ Battle Update\n\n`;
       message += `Enemy HP: ${turnResult.enemyHp}\n`;
