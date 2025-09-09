@@ -39,11 +39,11 @@ export interface ICharacterService {
   levelUp(id: string, newLevel: number, newStats: CharacterStats): Promise<Character>;
   updateSpriteUrl(id: string, spriteUrl: string): Promise<Character>;
   deleteCharacter(id: string): Promise<void>;
-  getCharacterWithInventory(id: string): Promise<any>;
-  getCharacterWithQuests(id: string): Promise<any>;
-  getCharacterWithBattles(id: string): Promise<any>;
+  getCharacterWithInventory(id: string): Promise<Character & { inventory: any[] }>;
+  getCharacterWithQuests(id: string): Promise<Character & { characterQuests: any[] }>;
+  getCharacterWithBattles(id: string): Promise<Character & { pveBattles: any[] }>;
   getCharacterCount(userId: string): Promise<number>;
-  getCharactersByLevel(minLevel: number, maxLevel?: number): Promise<any[]>;
+  getCharactersByLevel(minLevel: number, maxLevel?: number): Promise<Character[]>;
 }
 
 export class CharacterService implements ICharacterService {
@@ -63,8 +63,8 @@ export class CharacterService implements ICharacterService {
         class: characterClass,
         level: 1,
         xp: 0,
-        stats: stats as any,
-        equipment: equipment as any,
+        stats: stats as CharacterStats,
+        equipment: equipment as Equipment,
       },
     });
   }
@@ -97,7 +97,7 @@ export class CharacterService implements ICharacterService {
     const { userId, ...updateData } = data;
     return this.db.character.update({
       where: { id },
-      data: updateData as any,
+      data: updateData as Partial<Omit<Character, 'id' | 'createdAt' | 'updatedAt'>>,
     });
   }
 
@@ -105,7 +105,7 @@ export class CharacterService implements ICharacterService {
     return this.db.character.update({
       where: { id },
       data: {
-        stats: stats as any,
+        stats: stats as CharacterStats,
       },
     });
   }
@@ -114,7 +114,7 @@ export class CharacterService implements ICharacterService {
     return this.db.character.update({
       where: { id },
       data: {
-        equipment: equipment as any,
+        equipment: equipment as Equipment,
       },
     });
   }
@@ -135,7 +135,7 @@ export class CharacterService implements ICharacterService {
       where: { id },
       data: {
         level: newLevel,
-        stats: newStats as any,
+        stats: newStats as CharacterStats,
       },
     });
   }
@@ -153,7 +153,7 @@ export class CharacterService implements ICharacterService {
     });
   }
 
-  async getCharacterWithInventory(id: string) {
+  async getCharacterWithInventory(id: string): Promise<Character & { inventory: any[] } | null> {
     return this.db.character.findUnique({
       where: { id },
       include: {
@@ -175,7 +175,7 @@ export class CharacterService implements ICharacterService {
     });
   }
 
-  async getCharacterWithQuests(id: string) {
+  async getCharacterWithQuests(id: string): Promise<Character & { characterQuests: any[] } | null> {
     return this.db.character.findUnique({
       where: { id },
       include: {
@@ -188,7 +188,7 @@ export class CharacterService implements ICharacterService {
     });
   }
 
-  async getCharacterWithBattles(id: string) {
+  async getCharacterWithBattles(id: string): Promise<Character & { pveBattles: any[] } | null> {
     return this.db.character.findUnique({
       where: { id },
       include: {

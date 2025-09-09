@@ -24,7 +24,7 @@ router.post('/pve', async (req: Request, res: Response) => {
     if (area && !enemyLevel) {
       const character = await pveService.getBattle(characterId);
       if (character) {
-        const characterLevel = (character.state as any).characterLevel || 1;
+        const characterLevel = (character.state as { characterLevel?: number }).characterLevel || 1;
         const spawnedEnemy = pveService.spawnEnemy(area, characterLevel);
         if (spawnedEnemy) {
           enemyToFight = spawnedEnemy.type;

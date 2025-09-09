@@ -20,12 +20,12 @@ export interface PaymentIntentResult {
 
 export interface IPaymentService {
   createPaymentIntent(userId: string, productId: string): Promise<PaymentIntentResult>;
-  processPaymentSuccess(paymentIntentId: string, providerData: any): Promise<PaymentIntentResult>;
+  processPaymentSuccess(paymentIntentId: string, providerData: Record<string, unknown>): Promise<PaymentIntentResult>;
   processPaymentFailure(paymentIntentId: string, reason: string): Promise<PaymentIntentResult>;
   getPaymentIntent(paymentIntentId: string): Promise<PaymentIntent | null>;
   getUserPaymentHistory(userId: string): Promise<PaymentIntent[]>;
   getAvailableProducts(): PaymentProduct[];
-  validatePaymentWebhook(payload: any, signature: string): boolean;
+  validatePaymentWebhook(payload: Record<string, unknown>, signature: string): boolean;
 }
 
 export class PaymentService implements IPaymentService {
@@ -185,7 +185,7 @@ export class PaymentService implements IPaymentService {
       data: {
         status: PaymentStatus.SUCCEEDED,
         metadata: {
-          ...(paymentIntent.metadata as any),
+          ...(paymentIntent.metadata as Record<string, unknown>),
           providerData,
           processedAt: new Date().toISOString(),
         },
@@ -226,7 +226,7 @@ export class PaymentService implements IPaymentService {
       data: {
         status: PaymentStatus.FAILED,
         metadata: {
-          ...(paymentIntent.metadata as any),
+          ...(paymentIntent.metadata as Record<string, unknown>),
           failureReason: reason,
           failedAt: new Date().toISOString(),
         },
@@ -256,7 +256,7 @@ export class PaymentService implements IPaymentService {
     return [...this.products];
   }
 
-  validatePaymentWebhook(payload: any, signature: string): boolean {
+  validatePaymentWebhook(payload: Record<string, unknown>, signature: string): boolean {
     const crypto = require('crypto');
     const secret = process.env['TELEGRAM_PAYMENT_SECRET'] || 'your-secret-key';
     

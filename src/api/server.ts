@@ -17,7 +17,7 @@ import { webhookRoutes } from '@/api/routes/webhookRoutes';
 export class ApiServer {
   private app: express.Application;
   private port: number;
-  private server: any;
+  private server: import('http').Server | null = null;
 
   constructor() {
     this.app = express();

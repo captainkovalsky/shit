@@ -9,7 +9,7 @@ export const requestLogger = (req: Request, res: Response, next: NextFunction): 
   }
 
   const originalEnd = res.end;
-  res.end = function(chunk?: any, encoding?: any) {
+  res.end = function(chunk?: unknown, encoding?: BufferEncoding): Response {
     const duration = Date.now() - start;
     
     if (config.environment === 'development') {

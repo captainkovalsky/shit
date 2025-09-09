@@ -1,6 +1,6 @@
 import { Router, Request, Response } from 'express';
 import { QuestService } from '@/database/services/QuestService';
-import { CharacterService } from '@/database/services/CharacterService';
+import { CharacterService, CharacterStats } from '@/database/services/CharacterService';
 import { UserService } from '@/database/services/UserService';
 import { LevelingService } from '@/game/services/LevelingService';
 
@@ -23,7 +23,7 @@ router.get('/', async (req: Request, res: Response) => {
       }
 
       const quests = type 
-        ? await questService.getQuestsByType(type as any)
+        ? await questService.getQuestsByType(type as 'STORY' | 'SIDE' | 'DAILY' | 'WEEKLY')
         : await questService.getAvailableQuests(character.level);
       
       const characterQuests = await questService.getCharacterQuests(characterId as string);
@@ -202,7 +202,7 @@ router.post('/:questId/complete', async (req: Request, res: Response) => {
       character.xp,
       rewards.xp,
       character.class,
-      character.stats as any
+      character.stats as CharacterStats
     );
 
     if (levelUpResult.levelsGained > 0) {

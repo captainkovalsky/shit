@@ -1,7 +1,7 @@
 // CharacterClass will be imported from the correct location
 import { config } from '@/config/index';
 import { IUserService } from '@/database/services/UserService';
-import { ICharacterService } from '@/database/services/CharacterService';
+import { ICharacterService, CharacterStats } from '@/database/services/CharacterService';
 import { IQuestService } from '@/database/services/QuestService';
 import { IShopService } from '@/database/services/ShopService';
 import { IEquipmentService } from '@/database/services/EquipmentService';
@@ -28,9 +28,9 @@ export class CallbackHandler {
   ) {}
 
   async handleClassSelection(ctx: BotContext, characterClass: string): Promise<void> {
-    const classEnum = characterClass.toUpperCase() as any;
+    const classEnum = characterClass.toUpperCase() as 'WARRIOR' | 'MAGE' | 'ROGUE';
     if (classEnum) {
-      (ctx.session as any).characterClass = classEnum;
+      ctx.session.characterClass = classEnum;
     }
     
     await ctx.editMessageText(
@@ -58,11 +58,11 @@ export class CallbackHandler {
     }
 
     const cardUrl = await this.imageService.generateCharacterCard(
-      character as any,
+      character,
       character.spriteUrl || ''
     );
 
-    const stats = character.stats as any;
+    const stats = character.stats as CharacterStats;
     await ctx.replyWithPhoto(
       { url: cardUrl },
       {
@@ -110,14 +110,14 @@ export class CallbackHandler {
       const battleResult = await this.pveService.startBattle(characterId, enemySpawn.type, enemySpawn.level);
       
       await ctx.scene.enter('combat');
-      (ctx.session as any).battleId = battleResult.battle.id;
-      (ctx.session as any).characterId = characterId;
+      ctx.session.battleId = battleResult.battle.id;
+      ctx.session.characterId = characterId;
 
       const battle = battleResult.battle;
-      const state = battle.state as any;
+      const state = battle.state as { enemyHp?: number; characterHp?: number; characterMp?: number };
       const enemyHp = state?.enemyHp || 100;
-      const characterHp = state?.characterHp || (character.stats as any).hp;
-      const characterMp = state?.characterMp || (character.stats as any).mp;
+      const characterHp = state?.characterHp || (character.stats as CharacterStats).hp;
+      const characterMp = state?.characterMp || (character.stats as CharacterStats).mp;
 
       await ctx.editMessageText(
         `⚔️ Battle Started!\n\n` +
@@ -147,8 +147,8 @@ export class CallbackHandler {
   }
 
   async handleBattleAction(ctx: BotContext, action: string): Promise<void> {
-    const battleId = (ctx.session as any).battleId;
-    const characterId = (ctx.session as any).characterId;
+    const battleId = ctx.session.battleId;
+    const characterId = ctx.session.characterId;
 
     if (!battleId || !characterId) {
       await ctx.answerCbQuery('No active battle found!');
@@ -162,7 +162,7 @@ export class CallbackHandler {
     }
 
     try {
-      const turnResult = await this.pveService.takeTurn(battleId, action as any);
+      const turnResult = await this.pveService.takeTurn(battleId, action as 'attack' | 'skill' | 'item' | 'run');
       
       const battle = await this.pveService.getBattle(battleId);
       if (!battle) {
@@ -170,7 +170,7 @@ export class CallbackHandler {
         return;
       }
 
-      const enemy = battle.enemy as any;
+      const enemy = battle.enemy as { type: string; level: number; hp: number; attack: number; defense: number };
 
       let message = `⚔️ Battle Update\n\n`;
       message += `Enemy HP: ${turnResult.enemyHp}\n`;
@@ -271,21 +271,21 @@ export class CallbackHandler {
       return;
     }
 
-    const stats = LevelingService.createBaseStats((ctx.session as any).characterClass);
+    const stats = LevelingService.createBaseStats(ctx.session.characterClass!);
     const equipment = {};
     
     const character = await this.characterService.createCharacter(
       user.id,
       name,
-      (ctx.session as any).characterClass,
+      ctx.session.characterClass!,
       stats,
       equipment
     );
 
-    const spriteUrl = await this.imageService.generateCharacterSprite(character as any);
+    const spriteUrl = await this.imageService.generateCharacterSprite(character);
     await this.characterService.updateSpriteUrl(character.id, spriteUrl);
 
-    const cardUrl = await this.imageService.generateCharacterCard(character as any, spriteUrl);
+    const cardUrl = await this.imageService.generateCharacterCard(character, spriteUrl);
 
     await ctx.replyWithPhoto(
       { url: cardUrl },
@@ -338,8 +338,8 @@ export class CallbackHandler {
     if (inProgressQuests.length > 0) {
       message += `🔄 In Progress (${inProgressQuests.length}):\n`;
       inProgressQuests.forEach(quest => {
-        const objective = quest.objective as any;
-        const progress = quest.progress as any;
+        const objective = quest.objective as { target: string; count: number };
+        const progress = quest.progress as { [key: string]: { count: number } };
         const progressKey = `kill_${objective.target}`;
         const currentCount = progress[progressKey]?.count || 0;
         message += `• ${quest.title} - ${currentCount}/${objective.count} ${objective.target}s\n`;
@@ -418,8 +418,8 @@ export class CallbackHandler {
 
       await this.questService.acceptQuest(characterId, questId);
       
-      const objective = quest.objective as any;
-      const rewards = quest.rewards as any;
+      const objective = quest.objective as { type: string; target: string; count: number };
+      const rewards = quest.rewards as { xp: number; gold: number; items: string[] };
       
       let message = `📜 Quest Accepted!\n\n`;
       message += `**${quest.title}**\n`;
@@ -469,8 +469,8 @@ export class CallbackHandler {
         return;
       }
 
-      const objective = quest.objective as any;
-      const progress = characterQuest.progress as any;
+      const objective = quest.objective as { target: string; count: number };
+      const progress = characterQuest.progress as { [key: string]: { count: number } };
       const progressKey = `kill_${objective.target}`;
       const currentCount = progress[progressKey]?.count || 0;
       const isCompleted = currentCount >= objective.count;
@@ -529,8 +529,8 @@ export class CallbackHandler {
         return;
       }
 
-      const objective = quest.objective as any;
-      const progress = characterQuest.progress as any;
+      const objective = quest.objective as { target: string; count: number };
+      const progress = characterQuest.progress as { [key: string]: { count: number } };
       const progressKey = `kill_${objective.target}`;
       const currentCount = progress[progressKey]?.count || 0;
       
@@ -554,7 +554,7 @@ export class CallbackHandler {
         character.xp,
         rewards.xp,
         character.class,
-        character.stats as any
+        character.stats as CharacterStats
       );
 
       if (levelUpResult.levelsGained > 0) {
@@ -729,7 +729,7 @@ export class CallbackHandler {
 
       if (item.stats) {
         message += `**Stats:**\n`;
-        Object.entries(item.stats as any).forEach(([stat, value]) => {
+        Object.entries(item.stats as Record<string, number>).forEach(([stat, value]) => {
           message += `• ${stat}: ${value}\n`;
         });
         message += '\n';
@@ -1024,7 +1024,7 @@ export class CallbackHandler {
 
   async handleEquip(ctx: BotContext, characterId: string, inventoryItemId: string, slot: string): Promise<void> {
     try {
-      const result = await this.equipmentService.equipItem(characterId, inventoryItemId, slot as any);
+      const result = await this.equipmentService.equipItem(characterId, inventoryItemId, slot as 'weapon' | 'helmet' | 'armor' | 'boots' | 'accessory');
       
       if (!result.success) {
         await ctx.answerCbQuery(`Failed to equip item: ${result.error}`);
@@ -1050,7 +1050,7 @@ export class CallbackHandler {
 
   async handleUnequip(ctx: BotContext, characterId: string, slot: string): Promise<void> {
     try {
-      const result = await this.equipmentService.unequipItem(characterId, slot as any);
+      const result = await this.equipmentService.unequipItem(characterId, slot as 'weapon' | 'helmet' | 'armor' | 'boots' | 'accessory');
       
       if (!result.success) {
         await ctx.answerCbQuery(`Failed to unequip item: ${result.error}`);
@@ -1216,7 +1216,7 @@ export class CallbackHandler {
         message += 'No bosses available at your level.';
       } else {
         message += `Bosses:\n\n`;
-        availableBosses.forEach((boss: any, index: number) => {
+        availableBosses.forEach((boss: { name: string; level: number; hp: number; rewards: { xp: number; gold: number } }, index: number) => {
           message += `${index + 1}. ${boss.name}\n`;
           message += `   Level: ${boss.level} | HP: ${boss.hp}\n`;
           message += `   Rewards: ${boss.rewards.xp} XP, ${boss.rewards.gold} Gold\n\n`;
@@ -1262,7 +1262,7 @@ export class CallbackHandler {
       const battle = await this.bossService.createBossBattle(characterId, bossId);
       
       // Store battle state in session
-      (ctx.session as any).bossBattleState = battle;
+      ctx.session.bossBattleState = battle;
       
       let message = `👹 Boss Battle Started!\n\n`;
       message += `Boss: ${boss.name}\n`;
@@ -1298,7 +1298,7 @@ export class CallbackHandler {
         return;
       }
 
-      const battleState = (ctx.session as any).bossBattleState;
+      const battleState = ctx.session.bossBattleState;
       if (!battleState) {
         await ctx.answerCbQuery('No active boss battle found!');
         return;
@@ -1346,7 +1346,7 @@ export class CallbackHandler {
           }
         });
         
-        (ctx.session as any).bossBattleState = null;
+        ctx.session.bossBattleState = null;
         return;
       }
 
@@ -1368,12 +1368,12 @@ export class CallbackHandler {
           }
         });
         
-        (ctx.session as any).bossBattleState = null;
+        ctx.session.bossBattleState = null;
         return;
       }
 
       // Update session with new battle state
-      (ctx.session as any).bossBattleState = updatedBattleState;
+      ctx.session.bossBattleState = updatedBattleState;
 
       let message = `👹 Boss Battle\n\n`;
       message += `Boss: ${updatedBattleState.boss.name}\n`;
@@ -1407,7 +1407,7 @@ export class CallbackHandler {
     }
   }
 
-  private async showCharacterMenu(ctx: BotContext, character: any): Promise<void> {
+  private async showCharacterMenu(ctx: BotContext, character: { name: string; class: string; level: number }): Promise<void> {
     await ctx.reply(
       `🎮 ${character.name} - ${character.class} (Level ${character.level})\n\n` +
       'Choose an action:',
