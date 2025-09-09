@@ -60,7 +60,7 @@ export class CommandHandler {
     );
   }
 
-  private async showMainMenu(ctx: BotContext, user: any, characters: any[]): Promise<void> {
+  private async showMainMenu(ctx: BotContext, user: { id: string; telegramId: bigint }, characters: { id: string; name: string; class: string; level: number }[]): Promise<void> {
     if (characters.length === 1) {
       await this.showCharacterMenu(ctx, characters[0]);
     } else {
@@ -85,7 +85,7 @@ export class CommandHandler {
     }
   }
 
-  private async showCharacterMenu(ctx: BotContext, character: any): Promise<void> {
+  private async showCharacterMenu(ctx: BotContext, character: { name: string; class: string; level: number }): Promise<void> {
     await ctx.reply(
       `🎮 ${character.name} - ${character.class} (Level ${character.level})\n\n` +
       'Choose an action:',
