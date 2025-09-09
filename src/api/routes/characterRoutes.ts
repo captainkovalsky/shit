@@ -1,5 +1,5 @@
 import { Router, Request, Response } from 'express';
-import { CharacterService } from '@/database/services/CharacterService';
+import { CharacterService, CharacterStats } from '@/database/services/CharacterService';
 import { EquipmentService } from '@/database/services/EquipmentService';
 import { CharacterClass } from '@prisma/client';
 
@@ -341,7 +341,7 @@ router.get('/:id/stats', async (req: Request, res: Response) => {
       });
     }
 
-    const baseStats = character.stats as any;
+    const baseStats = character.stats as CharacterStats;
     const equippedStats = await equipmentService.getEquippedStats(id);
     
     const totalStats = {
