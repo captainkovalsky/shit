@@ -14,7 +14,7 @@ export interface EquipmentSlot {
 export interface EquipResult {
   success: boolean;
   character: Character;
-  renderJob?: any;
+  renderJob?: { id: string; status: string };
   error?: string;
 }
 
@@ -22,7 +22,7 @@ export interface IEquipmentService {
   equipItem(characterId: string, inventoryItemId: string, slot: keyof EquipmentSlot): Promise<EquipResult>;
   unequipItem(characterId: string, slot: keyof EquipmentSlot): Promise<EquipResult>;
   getCharacterEquipment(characterId: string): Promise<EquipmentSlot>;
-  getEquippedStats(characterId: string): Promise<any>;
+  getEquippedStats(characterId: string): Promise<CharacterStats>;
   canEquipItem(characterId: string, itemId: string, slot: keyof EquipmentSlot): Promise<{ canEquip: boolean; reason?: string }>;
   getAvailableSlots(characterId: string): Promise<{ [key in keyof EquipmentSlot]: boolean }>;
 }
@@ -97,7 +97,7 @@ export class EquipmentService implements IEquipmentService {
     newEquipment[slot] = inventoryItem.itemId;
 
     const updatedCharacter = await this.characterService.updateCharacter(characterId, {
-      equipment: newEquipment as any,
+      equipment: newEquipment as Equipment,
     });
 
     await prisma.inventoryItem.update({
@@ -107,8 +107,8 @@ export class EquipmentService implements IEquipmentService {
 
     const renderJob = await this.imageService.generateCharacterSprite({
       ...updatedCharacter,
-      stats: updatedCharacter.stats as any,
-      equipment: updatedCharacter.equipment as any,
+      stats: updatedCharacter.stats as CharacterStats,
+      equipment: updatedCharacter.equipment as Equipment,
       spriteUrl: updatedCharacter.spriteUrl || '',
     });
 
@@ -162,13 +162,13 @@ export class EquipmentService implements IEquipmentService {
     delete newEquipment[slot];
 
     const updatedCharacter = await this.characterService.updateCharacter(characterId, {
-      equipment: newEquipment as any,
+      equipment: newEquipment as Equipment,
     });
 
     const renderJob = await this.imageService.generateCharacterSprite({
       ...updatedCharacter,
-      stats: updatedCharacter.stats as any,
-      equipment: updatedCharacter.equipment as any,
+      stats: updatedCharacter.stats as CharacterStats,
+      equipment: updatedCharacter.equipment as Equipment,
       spriteUrl: updatedCharacter.spriteUrl || '',
     });
 
@@ -209,7 +209,7 @@ export class EquipmentService implements IEquipmentService {
     };
 
     for (const item of equippedItems) {
-      const stats = item.stats as any;
+      const stats = item.stats as Record<string, number>;
       for (const [stat, value] of Object.entries(stats)) {
         if (typeof value === 'number' && stat in totalStats) {
           totalStats[stat as keyof typeof totalStats] += value;
@@ -261,7 +261,8 @@ export class EquipmentService implements IEquipmentService {
       return { canEquip: false, reason: `Item type ${item.type} cannot be equipped in ${slot} slot` };
     }
 
-    if (character.level < (item as any).levelReq || 1) {
+    const levelReq = (item as { levelReq?: number }).levelReq || 1;
+    if (character.level < levelReq) {
       return { canEquip: false, reason: 'Character level too low' };
     }
 
