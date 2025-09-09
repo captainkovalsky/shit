@@ -20,12 +20,12 @@ export interface PaymentIntentResult {
 
 export interface IPaymentService {
   createPaymentIntent(userId: string, productId: string): Promise<PaymentIntentResult>;
-  processPaymentSuccess(paymentIntentId: string, providerData: any): Promise<PaymentIntentResult>;
+  processPaymentSuccess(paymentIntentId: string, providerData: Record<string, unknown>): Promise<PaymentIntentResult>;
   processPaymentFailure(paymentIntentId: string, reason: string): Promise<PaymentIntentResult>;
   getPaymentIntent(paymentIntentId: string): Promise<PaymentIntent | null>;
   getUserPaymentHistory(userId: string): Promise<PaymentIntent[]>;
   getAvailableProducts(): PaymentProduct[];
-  validatePaymentWebhook(payload: any, signature: string): boolean;
+  validatePaymentWebhook(payload: Record<string, unknown>, signature: string): boolean;
 }
 
 export class PaymentService implements IPaymentService {
