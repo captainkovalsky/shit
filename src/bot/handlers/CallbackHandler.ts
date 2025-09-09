@@ -418,8 +418,8 @@ export class CallbackHandler {
 
       await this.questService.acceptQuest(characterId, questId);
       
-      const objective = quest.objective as any;
-      const rewards = quest.rewards as any;
+      const objective = quest.objective as { type: string; target: string; count: number };
+      const rewards = quest.rewards as { xp: number; gold: number; items: string[] };
       
       let message = `📜 Quest Accepted!\n\n`;
       message += `**${quest.title}**\n`;
@@ -469,8 +469,8 @@ export class CallbackHandler {
         return;
       }
 
-      const objective = quest.objective as any;
-      const progress = characterQuest.progress as any;
+      const objective = quest.objective as { target: string; count: number };
+      const progress = characterQuest.progress as { [key: string]: { count: number } };
       const progressKey = `kill_${objective.target}`;
       const currentCount = progress[progressKey]?.count || 0;
       const isCompleted = currentCount >= objective.count;
@@ -529,8 +529,8 @@ export class CallbackHandler {
         return;
       }
 
-      const objective = quest.objective as any;
-      const progress = characterQuest.progress as any;
+      const objective = quest.objective as { target: string; count: number };
+      const progress = characterQuest.progress as { [key: string]: { count: number } };
       const progressKey = `kill_${objective.target}`;
       const currentCount = progress[progressKey]?.count || 0;
       
