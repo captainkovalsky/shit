@@ -15,6 +15,7 @@ export interface CombatSession extends Scenes.SceneSessionData {
   battleId?: string;
   characterId?: string;
   characterClass?: CharacterClass;
+  bossBattleState?: any; // Will be properly typed when BossBattleState is imported
 }
 
 export interface BotContext extends Context {

@@ -1216,7 +1216,7 @@ export class CallbackHandler {
         message += 'No bosses available at your level.';
       } else {
         message += `Bosses:\n\n`;
-        availableBosses.forEach((boss: any, index: number) => {
+        availableBosses.forEach((boss: { name: string; level: number; hp: number; rewards: { xp: number; gold: number } }, index: number) => {
           message += `${index + 1}. ${boss.name}\n`;
           message += `   Level: ${boss.level} | HP: ${boss.hp}\n`;
           message += `   Rewards: ${boss.rewards.xp} XP, ${boss.rewards.gold} Gold\n\n`;
@@ -1262,7 +1262,7 @@ export class CallbackHandler {
       const battle = await this.bossService.createBossBattle(characterId, bossId);
       
       // Store battle state in session
-      (ctx.session as any).bossBattleState = battle;
+      ctx.session.bossBattleState = battle;
       
       let message = `👹 Boss Battle Started!\n\n`;
       message += `Boss: ${boss.name}\n`;
@@ -1298,7 +1298,7 @@ export class CallbackHandler {
         return;
       }
 
-      const battleState = (ctx.session as any).bossBattleState;
+      const battleState = ctx.session.bossBattleState;
       if (!battleState) {
         await ctx.answerCbQuery('No active boss battle found!');
         return;
@@ -1346,7 +1346,7 @@ export class CallbackHandler {
           }
         });
         
-        (ctx.session as any).bossBattleState = null;
+        ctx.session.bossBattleState = null;
         return;
       }
 
@@ -1368,12 +1368,12 @@ export class CallbackHandler {
           }
         });
         
-        (ctx.session as any).bossBattleState = null;
+        ctx.session.bossBattleState = null;
         return;
       }
 
       // Update session with new battle state
-      (ctx.session as any).bossBattleState = updatedBattleState;
+      ctx.session.bossBattleState = updatedBattleState;
 
       let message = `👹 Boss Battle\n\n`;
       message += `Boss: ${updatedBattleState.boss.name}\n`;
@@ -1407,7 +1407,7 @@ export class CallbackHandler {
     }
   }
 
-  private async showCharacterMenu(ctx: BotContext, character: any): Promise<void> {
+  private async showCharacterMenu(ctx: BotContext, character: { name: string; class: string; level: number }): Promise<void> {
     await ctx.reply(
       `🎮 ${character.name} - ${character.class} (Level ${character.level})\n\n` +
       'Choose an action:',
