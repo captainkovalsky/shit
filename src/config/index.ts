@@ -88,7 +88,7 @@ export const config: AppConfig = {
   logLevel: (process.env['LOG_LEVEL'] as 'error' | 'warn' | 'info' | 'debug') || 'info',
 
   database: {
-    url: process.env['DATABASE_URL']!,
+    url: process.env['DATABASE_URL'] || (() => { throw new Error('DATABASE_URL is required'); })(),
     maxConnections: parseInt(process.env['DB_MAX_CONNECTIONS'] || '10', 10),
     connectionTimeout: parseInt(process.env['DB_CONNECTION_TIMEOUT'] || '60000', 10),
   },
@@ -100,7 +100,7 @@ export const config: AppConfig = {
   },
 
   bot: {
-    token: process.env['BOT_TOKEN']!,
+    token: process.env['BOT_TOKEN'] || (() => { throw new Error('BOT_TOKEN is required'); })(),
     webhookUrl: process.env['WEBHOOK_URL'],
     webhookSecret: process.env['WEBHOOK_SECRET'],
   },
