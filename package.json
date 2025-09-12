@@ -1,7 +1,7 @@
 {
-  "name": "shit",
-  "version": "0.0.1",
-  "description": "",
+  "name": "nestjs-skeleton",
+  "version": "1.0.0",
+  "description": "Empty NestJS application skeleton",
   "author": "",
   "private": true,
   "license": "UNLICENSED",
