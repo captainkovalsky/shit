@@ -24,5 +24,5 @@ async function bootstrap() {
     console.log(`Application is running on: http://localhost:${port}`);
     console.log(`Swagger documentation: http://localhost:${port}/api`);
 }
-bootstrap();
+void bootstrap();
 //# sourceMappingURL=main.js.map
